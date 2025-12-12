@@ -177,55 +177,8 @@ app.get('/dropdb', async (req, res) => {
     }
 });
 
-// ASKHSH 3 - XSS EXAMPLES
-// GIA NA BOUME STO /UNSAFE pame sto link http://localhost:3000/UNSAFE
-// <button onclick="alert('ATTACK SUCCESS!');">press hehehe</button> PREPEI NA GRAPSO STO BAR
-//grafoume to button sto input.
-const comments = [];
 
-function escapeHtml(text) { //FUNCTION TO ESCAPE HTML(for safety)
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-app.post('/comment2', (req, res) => {
-    const comment = req.body.comment;
-    comments.push(comment); 
-    res.redirect('/UNSAFE');
-});
-app.get('/UNSAFE', (req, res) => {
-    const commentsHtml = comments //vazoume ${escapeHtml(c)} alios:
-        .map(c => `<li>${escapeHtml(c)} </li>`) // AMA THELOUME NA KANOUME "ePITHESI" TOTE VGAZOUME TO escapeHtml KAI AFINOUME ${c} MONO
-        .join('');
-    res.send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Fixed XSS comments</title>
-            <meta charset="UTF-8" />
-          </head>
-          <body>
-            <h1>Asfales minima!</h1>
-            <form method="POST" action="/comment2">
-              <input size=50 name="comment" placeholder="ATACK ME" required />
-              <button type="submit">SEND!</button>
-            </form>
-
-            <h2>safe comment ara kanoume "defend":</h2>
-            <ul>
-              ${commentsHtml}
-            </ul>
-          </body>
-        </html>
-    `);
-});
-
-
+//post
 app.post('/review/', async (req, res) => {
     const { band_name, sender, review, rating } = req.body;
 
@@ -251,7 +204,7 @@ app.post('/review/', async (req, res) => {
     }
 });
 
-// 2. Ανάκτηση review (GET)
+//get
 app.get('/reviews/:band_name', async (req, res) => {
     const { band_name } = req.params;
     const { ratingFrom, ratingTo } = req.query;
@@ -267,8 +220,7 @@ app.get('/reviews/:band_name', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
-// 3. Ανανέωση Κατάστασης (PUT)
+//put
 app.put('/reviewStatus/:review_id/:status', async (req, res) => {
     const { review_id, status } = req.params;
 
@@ -287,8 +239,7 @@ app.put('/reviewStatus/:review_id/:status', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
-// 4. Διαγραφή Κριτικής (DELETE)
+//delete
 app.delete('/reviewDeletion/:review_id', async (req, res) => {
     const { review_id } = req.params;
 
@@ -309,5 +260,4 @@ app.delete('/reviewDeletion/:review_id', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-  console.log('unsafe XSS test at http://localhost:3000/UNSAFE');
 });
