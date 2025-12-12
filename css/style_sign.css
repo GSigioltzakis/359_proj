@@ -1,0 +1,246 @@
+/*den vazw *{}, oste na ta exw ksexorista sto body*/
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-image: url('bg.jpg');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    margin: 0;
+    color: #000000bd;
+    font-size: 2rem;
+    background-color: #f5f5f588;
+    border-radius: 5px;
+}
+
+.section_1, .section_2, .section_1_band, .section_2_band {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    width: 900px;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+form {
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+}
+/*all classes */
+.username, .email, .password, .firstname, .lastname, .birthdate, 
+.gender, .country, .address, .telephone, .band_name, .music_genres, .band_description, 
+.members_number, .foundedYear, .band_city {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+label {
+    font-weight: 600;
+    color: #000000;
+    margin-bottom: 5px;
+}
+.music_genres label { /*to mono "ksexoristo" class"*/
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.toggle_password{
+    padding: 8px 12px;
+    border: 2px solid #ddd; /*kikliko*/
+    border-radius: 6px; 
+    background-color: #fff;
+    cursor: pointer;
+    color: #555;
+    transition: border-color 0.5s;
+    margin-top: 8px;
+    
+}
+
+.toggle_password:hover, .toggle_password:focus {
+    border-color: #000000a2; 
+    outline: none; 
+}
+input, select, textarea {
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.5s;
+    font-family: inherit; /* to text area klironomei to font */
+    width: 100%;
+    box-sizing: border-box; 
+}
+
+input:focus, select:focus , textarea:focus {
+   
+    border-color: #000000;
+}
+
+.gender {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.gender p {
+    margin: 0;
+    font-weight: 600;
+    color: #000000;
+}
+
+.gender div {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+
+.submit_button {
+    background: #ffffffb2;
+    color: rgb(0, 0, 0);
+    padding: 15px 40px;
+    border: none;
+    border-radius: 6px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.7s;
+    margin: 20px 0;
+}
+
+.submit_button:hover {
+    background: #000000b7;
+    color: white;
+}
+/*GIA LOGIN PAGE*/
+
+#profile_section {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    padding: 30px;
+    box-sizing: border-box;
+}
+
+#profile_section .section_1 {
+    width: 600px;
+    max-width: 95%;
+    margin: 0;
+    border-left: 6px solid #4f584f;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    padding: 30px;
+}
+
+#updateForm {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two equal columns */
+    column-gap: 5px; 
+    row-gap: 15px; 
+}
+
+#profile_section input[readonly] {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+    color: #444;
+    cursor: not-allowed;
+}
+
+#updateForm .submit_button {
+    background-color: #15ca24b4;
+    color: white;
+    margin-top: 10px;
+    width: 100%;
+    padding: 12px;
+}
+
+#logoutBtn {
+    width: 100%;
+    background-color: #dd3a28 !important;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    color: white;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+/* for review section */
+.review_section {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.review_header {
+    text-align: center;
+}
+
+.review_header h2 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+}
+
+.review_header p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
+.review_form_content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.review_field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.review_result {
+    text-align: center;
+    font-weight: 600;
+    margin-top: 10px;
+    min-height: 24px; 
+}
+footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #7f8c8d;
+}
+

@@ -1,0 +1,104 @@
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    background-image: url('bg.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
+header {
+    padding: 20px;
+}
+
+header h1 {
+    margin: 0;
+    color: #000000;
+}
+
+.desc {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.desc p {
+    font-size: 54px;
+    color: #000000;
+    margin: 0;
+}
+
+#buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    
+    gap: 5px;
+    
+}
+
+.normal, .band, .normal_login{
+    padding: 35px 15px;
+    font-size: 20px;
+    border: none;
+    border-radius: 10px;
+    transition: all 0.6s ease;
+    width: 200px;
+    cursor: pointer;
+}
+
+.normal {
+    background-color: #000000de;
+}
+
+.band {
+    background-color: #e0e0e0c4;
+}
+
+.normal a{
+    color: rgb(255, 255, 255);
+    text-decoration: none;
+    display: block;
+}
+.band a{
+    color: rgb(0, 0, 0);
+    text-decoration: none;
+    display: block;
+}
+
+.normal:hover {
+    background-color: #9e9e9ea4;
+    transform: translateY(-14px);
+}
+
+.band:hover {
+    background-color: #d8d8d8;
+    transform: translateY(-14px);
+}
+.normal_login {
+    background-color: #333333; 
+}
+
+.normal_login a {
+    color: rgb(255, 255, 255);
+    text-decoration: none;
+    display: block;
+}
+
+.normal_login:hover {
+    background-color: #555555;
+    transform: translateY(-14px);
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    margin-top: auto;
+}
