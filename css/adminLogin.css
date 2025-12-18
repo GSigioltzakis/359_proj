@@ -1,0 +1,100 @@
+* {
+box-sizing: border-box;
+}
+body {
+margin: 0;
+font-family: 'Segoe UI', sans-serif;
+height: 100vh;
+display: flex;
+overflow: hidden;
+}
+/* to section miso-aristera */
+.left-panel {
+width: 50%;
+height: 100%;
+background-color: #f4f4f4;
+border-right: 2px solid #ccc;
+padding: 20px;
+overflow-y: auto;
+}
+/* miso-dexia */
+.right-panel {
+width: 50%;
+height: 100%;
+display: flex;
+flex-direction: column;
+}
+/* reviews: miso-dexia-pano */
+.top-right {
+height: 50%;
+background-color: #fff;
+border-bottom: 2px solid #ccc;
+padding: 20px;
+overflow-y: auto;
+}
+/* chart: miso-dexia-kato */
+.bottom-right {
+height: 50%;
+background-color: #f9f9f9;
+padding: 10px;
+display: flex;
+justify-content: center;
+align-items: center;
+}
+h2 {
+margin-top: 0;
+color: #444;
+border-bottom: 2px solid #d32f2f;
+display: inline-block;
+}
+/*table gia stixeia xriston, kai button delete
+SOS edw iparxei thema me to "action" tou 2ou table gia ta bands. Den kserw pos na to ftiaxw lol*/
+table {
+width: 100%;
+border-collapse: collapse;
+background: white;
+margin-top: 10px;
+}
+th, td {
+padding: 10px;
+text-align: left;
+border-bottom: 1px solid #ddd;
+}
+th {
+background: #333;
+color: white;
+}
+
+.btn-del {
+background: #d9534f;
+color: white;
+border: none;
+padding: 5px 10px;
+cursor: pointer;
+border-radius: 4px;
+}
+.btn-approve {
+background: #5cb85c;
+color: white;
+border: none;
+padding: 5px 10px;
+cursor: pointer;
+border-radius: 4px;
+margin-right: 5px;
+}
+/* stats pie*/
+.stats-cards {
+display: flex;
+gap: 15px;
+margin-bottom: 10px;
+width: 100%;
+justify-content: center;
+}
+.card {
+background: white;
+padding: 8px 15px;
+border-radius: 5px;
+box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+text-align: center;
+font-size: 0.9em;
+}
