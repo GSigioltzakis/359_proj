@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <link rel="stylesheet" href="css/adminLogin.css" />
+</head>
+<body>
+    <div class="left-panel">
+        <h2>Manage Users</h2>
+        <table id="usersTable">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <h2>Manage Bands</h2>
+        <table id="bandsTable"> <!-- Bands Table -->
+            <thead>
+                <tr>
+                    <th>Band Name</th>
+                    <th>City</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="right-panel">
+        <div class="top-right">
+            <h2>Pending Reviews</h2>
+            <div id="reviewsList"></div>
+        </div>
+
+        <div class="bottom-right">
+            <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center;">
+                <div class="stats-cards" id="statsText">Loading stats...</div>
+                
+                <div id="piechart" style="width: 100%; height: 100%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        //parmeno apo to google charts pou mas dothike: https://developers.google.com/chart/interactive/docs/gallery/piechart#making-a-donut-chart
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+
+        async function drawChart() {
+            const res = await fetch(`${API_BASE}/admin/stats`);
+            const data = await res.json();
+
+            var chartArray = [['City', 'Number of Bands']];
+            
+            data.bandsPerCity.forEach(item => {
+                chartArray.push([item.band_city, item.count]);
+            });
+
+            //miso-dexia-kato: statistics
+            document.getElementById('statsText').innerHTML = `
+                <div class="card"><strong>Profit</strong><br>€${data.profit}</div>
+                <div class="card"><strong>Users</strong><br>${data.usersBands.users}</div>
+                <div class="card"><strong>Bands</strong><br>${data.usersBands.bands}</div>
+            `;
+            //pie chart
+            var chartData = google.visualization.arrayToDataTable(chartArray);
+            var options = {
+                title: 'Bands per City',
+                is3D: true, //3d lol
+                backgroundColor: 'transparent'
+            };
+            var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+            chart.draw(chartData, options);
+        }
+
+        //gia user info/delete
+        async function loadUsers() {
+            const res = await fetch(`${API_BASE}/admin/users`);
+            const users = await res.json();
+            const tbody = document.querySelector('#usersTable tbody');
+            tbody.innerHTML = '';
+            
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${u.username}</td>
+                    <td>${u.email}</td>
+                    <td><button class="btn-del" onclick="deleteUser('${u.username}')">Delete</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        //an patisoume to delete pame stin methodo DELETE tou arxeiou app.js delete user.
+        async function deleteUser(username) {
+            if(!confirm('Delete user ' + username + '?')) return;
+            await fetch(`${API_BASE}/admin/user/${username}`, { method: 'DELETE' });
+            loadUsers(); // Refresh
+        }
+
+        //gia reviews approval/rejection
+        async function loadReviews() {
+            const res = await fetch(`${API_BASE}/admin/reviews/pending`);
+            const reviews = await res.json();
+            const container = document.getElementById('reviewsList');
+            container.innerHTML = '';
+
+            if(reviews.length === 0) container.innerHTML = '<p>No pending reviews.</p>';
+
+            reviews.forEach(r => {
+                const div = document.createElement('div');
+                div.style.border = "1px solid #ddd";
+                div.style.padding = "10px";
+                div.style.marginBottom = "10px";
+                div.style.background = "#fff";
+                div.innerHTML = `
+                    <strong>Band:</strong> ${r.band_name} | <strong>Rating:</strong> ${r.rating}/5<br>
+                    <em>"${r.review}"</em> - by ${r.sender}<br>
+                    <div style="margin-top:5px;"> 
+                        <!-- buttons approve/reject -->
+                        <button class="btn-approve" onclick="reviewAction(${r.review_id}, 'published')">Approve</button>
+                        <button class="btn-del" onclick="reviewAction(${r.review_id}, 'rejected')">Reject</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+        //an patisoume approve/reject pame stin methodo PUT tou arxeiou app.js review status.
+        async function reviewAction(id, status) {
+            await fetch(`${API_BASE}/reviewStatus/${id}/${status}`, { method: 'PUT' });
+            loadReviews(); 
+        }
+        //gia band info/delete
+        async function loadBands() {
+            const res = await fetch(`${API_BASE}/admin/bands`);
+            const bands = await res.json();
+            const tbody = document.querySelector('#bandsTable tbody');
+            tbody.innerHTML = '';
+            
+            bands.forEach(b => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${b.band_name}</td>
+                    <td>${b.band_city}</td> <td>
+                    <td><button class="btn-del" onclick="deleteBand('${b.username}')">Delete</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function deleteBand(username) {
+            if(!confirm('Delete band ' + username + ' and all their events/reviews?')) return;
+            
+            const res = await fetch(`${API_BASE}/admin/band/${username}`, { method: 'DELETE' });
+            
+            if(res.ok) {
+                loadBands();
+                drawChart(); 
+                loadReviews();
+            } else {
+                alert("Failed to delete band");
+            }
+        }
+
+        loadUsers();
+        loadBands();
+        loadReviews();
+    </script>
+</body>
+</html>
