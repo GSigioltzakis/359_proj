@@ -11,7 +11,10 @@ const cors = require('cors');
 const { initDatabase, dropDatabase } = require('./database');
 const { insertUser, insertBand } = require('./databaseInsert');
 const { getAllUsers, getUserByCredentials, checkExistence, updateUser } = require('./databaseQueriesUsers');
+const { getAllBands, deleteBand } = require('./databaseQueriesBands');
 const { createReview, getReviews, updateReviewStatus, deleteReview } = require('./databaseQueriesReviews');
+// --PROJECT---
+const { deleteUser, getPendingReviews, getAdminStats } = require('./databaseQueriesAdmin'); //import admin functions
 
 const app = express();
 const PORT = 3000;
@@ -181,8 +184,6 @@ app.get('/dropdb', async (req, res) => {
 //post
 app.post('/review/', async (req, res) => {
     const { band_name, sender, review, rating } = req.body;
-
-    // Validate Rating
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
         return res.status(406).json({ message: "Rating must be an integer between 1 and 5." });
     }
@@ -190,7 +191,7 @@ app.post('/review/', async (req, res) => {
     try {
         const reviewId = await createReview({ band_name, sender, review, rating });
         
-        console.log("rest api post request was successfully created!!"); // Requirement
+        console.log("rest api post request was successfully created!!");
         res.status(200).json({ 
             message: "Review created successfully",
             reviewId: reviewId 
@@ -255,8 +256,72 @@ app.delete('/reviewDeletion/:review_id', async (req, res) => {
     }
 });
 
+//FOR ADMIN PURPOSES (routes)
+app.post('/admin/login', (req, res) => {
+    const { username, password } = req.body;
+    //elenxos kodikou
+    if (username === 'admin' && password === 'admiN12@*') {
+        req.session.isAdmin = true;
+        res.status(200).json({ message: "Admin login success" });
+    } else {
+        res.status(401).json({ error: "Invalid admin credentials" });
+    }
+});
 
+//elenxoume an einai admin alios aporiptei
+function checkAdmin(req, res, next) {
+    if (req.session.isAdmin) next();
+    else res.status(403).json({ error: "Access denied" });
+}
+//get, pernoume ola ta dedomena ton users (aristero panel)
+app.get('/admin/users', checkAdmin, async (req, res) => {
+    try {
+        const users = await getAllUsers(); //from databaseQueriesUsers.js
+        res.json(users);
+    } catch (err) { res.status(500).json({error: err.message}); }
+});
+app.delete('/admin/user/:username', checkAdmin, async (req, res) => {
+    try {
+        const success = await deleteUser(req.params.username);
+        if (success) res.json({ message: "User deleted" });
+        else res.status(404).json({ error: "User not found" });
+    } catch (err) { res.status(500).json({error: err.message}); }
+});
 
+//gia reviews miso-dexia pano panel
+app.get('/admin/reviews/pending', checkAdmin, async (req, res) => {
+    try {
+        const reviews = await getPendingReviews();
+        res.json(reviews);
+    } catch (err) { res.status(500).json({error: err.message}); }
+});
+
+//stats pie chart kato dexia mesi
+app.get('/admin/stats', checkAdmin, async (req, res) => {
+    try {
+        const stats = await getAdminStats();
+        res.json(stats);
+    } catch (err) { res.status(500).json({error: err.message}); }
+});
+
+//additional info gia bands management (delete band)-------
+app.get('/admin/bands', checkAdmin, async (req, res) => {
+    try {
+        const bands = await getAllBands();
+        res.json(bands);
+    } catch (err) { res.status(500).json({error: err.message}); }
+});
+
+app.delete('/admin/band/:username', checkAdmin, async (req, res) => {
+    try {
+        const result = await deleteBand(req.params.username);
+        if (result === 'User deleted successfully.') { 
+             res.json({ message: "Band deleted" });
+        } else {
+             res.status(404).json({ error: result }); 
+        }
+    } catch (err) { res.status(500).json({error: err.message}); }
+});
 
 
 
