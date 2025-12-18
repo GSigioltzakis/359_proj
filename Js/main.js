@@ -469,27 +469,54 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) { console.error(err); }
     }
 
-    //Login Submit
+    //Login Submit, alagi login form logo admin -> prosthiki xeroristo login
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('login_username').value;
             const password = document.getElementById('login_password').value;
-            
-            const res = await fetch('http://localhost:3000/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await res.json();
+            const messageP = document.getElementById('login_message');
 
-            if (res.ok) {
-                console.log(data.message); // "Bravo correct login perfect"
-                alert(data.message); 
-                //AFTER logged in successfully, then show profile
-                checkAuthStatus(); 
-            } else {
-                document.getElementById('login_message').textContent = data.error;
+            //vlepoume arxika gia admin, elenxoume ton kodiko meta sto app.js
+            if (username === 'admin') {
+                try {
+                    const res = await fetch('http://localhost:3000/admin/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    if (res.ok) {
+                        window.location.href = "../../admin_dashboard.html"; 
+                    } else {
+                        messageP.textContent = "Invalid Admin Credentials";
+                    }
+                } catch (err) {
+                    console.error(err);
+                    messageP.textContent = "Server Error";
+                }
+                return;
+            }
+
+            //gia normal users
+            try {
+                const res = await fetch('http://localhost:3000/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    console.log(data.message);
+                    alert(data.message); 
+                    checkAuthStatus(); //vlepoume kai to profile
+                } else {
+                    messageP.textContent = data.error;
+                }
+            } catch (err) {
+                console.error(err);
+                messageP.textContent = "Server Connection Error";
             }
         });
     }
