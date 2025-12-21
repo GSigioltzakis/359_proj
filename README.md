@@ -22,3 +22,10 @@
 # (2)
 ## dimiourgia sxediagramatos gt den eixa ti alo na kanw:
 --> sxediagrama.html
+
+# (3)
+## ston fakelo bands dimiourgisa 2 nea arxeia (tha valw alla 2 pio meta), gia pio koble login proccess.
+1) band_user.hmtl -> omoio me to normal_user.html, apla eikona gia na patiseis ta koubia.
+2) band_login -> ilopiisi tou login omoia me to normal_login.html (kapos).
+3) 1. .(band_dashboard.html)
+   2. .(band_profile.html) tba
