@@ -18,3 +18,7 @@
 
 3) dimiourgia neou arxeiou gia SQL code:
     1. databaseQueriesAdmin.js -> gia deleteUser, getReview kai stats gia to chart.
+
+# (2)
+## dimiourgia sxediagramatos gt den eixa ti alo na kanw:
+--> sxediagrama.html
