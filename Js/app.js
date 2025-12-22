@@ -12,6 +12,7 @@ const { initDatabase, dropDatabase } = require('./database');
 const { insertUser, insertBand } = require('./databaseInsert');
 const { getAllUsers, getUserByCredentials, checkExistence, updateUser } = require('./databaseQueriesUsers');
 const { getAllBands, deleteBand } = require('./databaseQueriesBands');
+const { getBandByCredentials } = require('./databaseQueriesBands'); //import band login function
 const { createReview, getReviews, updateReviewStatus, deleteReview } = require('./databaseQueriesReviews');
 // --PROJECT---
 const { deleteUser, getPendingReviews, getAdminStats } = require('./databaseQueriesAdmin'); //import admin functions
@@ -323,8 +324,24 @@ app.delete('/admin/band/:username', checkAdmin, async (req, res) => {
     } catch (err) { res.status(500).json({error: err.message}); }
 });
 
-
-
+//routes gia band login 
+app.post('/band/login', async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        const bands = await getBandByCredentials(username, password);
+        
+        if (bands && bands.length > 0) {
+            req.session.loggedIn = true;
+            req.session.isBand = true; //flag that this is a band login
+            req.session.bandUsername = bands[0].username;
+            res.status(200).json({ message: "Band login success" });
+        } else {
+            res.status(401).json({ error: "Invalid band credentials" });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
