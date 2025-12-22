@@ -520,6 +520,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    //login form for band users
+    const bandLoginForm = document.getElementById('bandLoginForm'); //id apo band_login.html
+
+    if (bandLoginForm) {
+        bandLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('band_login_username').value;
+            const password = document.getElementById('band_login_password').value;
+            const messageP = document.getElementById('band_login_message');
+
+            try {
+                const res = await fetch('http://localhost:3000/band/login', {//sindesi route apo app.js
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await res.json();
+
+                if (res.ok) {
+                    window.location.href = "../html/band_dashboard.html"; 
+                } else {
+                    messageP.textContent = data.error;
+                }
+            } catch (err) {
+                console.error(err);
+                messageP.textContent = "Server Connection Error";
+            }
+        });
+    }
 
     function showProfile(user) {
         loginSection.style.display = 'none';
