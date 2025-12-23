@@ -90,5 +90,79 @@ async function deleteBand(username) {
   }
 }
 
+//nea functions gia to band dashboard, calendar, requests, chat, earnings.
+async function getAllBandEvents(band_id) {
+    const conn = await getConnection();
+    
+    const [publicEv] = await conn.execute(
+        `SELECT event_type as title, event_datetime as start, 'public' as type 
+         FROM public_events WHERE band_id = ?`, [band_id]
+    );
+    const [privateEv] = await conn.execute( //accepted private events
+        `SELECT event_type as title, event_datetime as start, 'private' as type 
+         FROM private_events WHERE band_id = ? AND (status = 'to be done' OR status = 'done')`, [band_id]
+    );
 
-module.exports = {getAllBands, getBandByCredentials, updateBand, deleteBand};
+    return [...publicEv, ...privateEv];
+}
+
+async function getBandRequests(band_id) {
+    const conn = await getConnection();
+    //sindeoume private_events me users gia na paroume to username tou user pou ekane to request
+    const sql = `
+        SELECT pe.*, u.username as user_name 
+        FROM private_events pe
+        JOIN users u ON pe.user_id = u.user_id
+        WHERE pe.band_id = ? AND (pe.status = 'requested' OR pe.status = 'to be done')
+        ORDER BY pe.event_datetime ASC`;
+    const [rows] = await conn.execute(sql, [band_id]);
+    return rows;
+}
+
+async function updateRequestStatus(event_id, status) {
+    const conn = await getConnection();
+    await conn.execute(
+        'UPDATE private_events SET status = ? WHERE private_event_id = ?', 
+        [status, event_id] //status: 'accepted' i 'rejected'
+    );
+}
+//sinartiseis minimaton gia to chat system
+async function getMessages(event_id) {
+    const conn = await getConnection();
+    const [rows] = await conn.execute('SELECT * FROM messages WHERE private_event_id = ? ORDER BY date_time ASC', [event_id]);
+    return rows;
+}
+async function sendMessage(data) {
+    const conn = await getConnection();
+    await conn.execute(
+        'INSERT INTO messages (private_event_id, message, sender, recipient, date_time) VALUES (?, ?, ?, ?, NOW())',
+        [data.event_id, data.message, 'band', 'user']
+    );
+}
+
+//tora prepei na prosthesoume ta events apo to calendar sto database (h kai to anapodo)
+async function addCalendarEvent(data) {
+    const conn = await getConnection();
+    //mikro paradeigma, prosthetoume to event me default values gia ta pedia pou den exoume
+    await conn.execute(
+        `INSERT INTO public_events (band_id, event_type, event_description, event_datetime, participants_price, event_city, event_address, event_lat, event_lon)
+         VALUES (?, ?, 'Added via Calendar', ?, 0, 'Unknown', 'TBD', 0, 0)`,
+        [data.band_id, data.title, data.start]
+    );
+}
+async function getBandEarnings(band_id) {
+    const conn = await getConnection();
+    // Sum the price of all events marked as 'done'
+    const [rows] = await conn.execute(
+        "SELECT SUM(price) as total FROM private_events WHERE band_id = ? AND status = 'done'",
+        [band_id]
+    );
+    
+    const totalRevenue = rows[0].total || 0;
+    return (totalRevenue * 0.85).toFixed(2); //15% commission lol
+}
+
+module.exports = { 
+    getBandByCredentials, getAllBandEvents, getBandRequests, 
+    updateRequestStatus, getMessages, sendMessage, addCalendarEvent, getAllBands, updateBand, deleteBand, getBandEarnings
+};
