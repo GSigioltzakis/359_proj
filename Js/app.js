@@ -11,12 +11,13 @@ const cors = require('cors');
 const { initDatabase, dropDatabase } = require('./database');
 const { insertUser, insertBand } = require('./databaseInsert');
 const { getAllUsers, getUserByCredentials, checkExistence, updateUser } = require('./databaseQueriesUsers');
-const { getAllBands, deleteBand } = require('./databaseQueriesBands');
-const { getBandByCredentials } = require('./databaseQueriesBands'); //import band login function
 const { createReview, getReviews, updateReviewStatus, deleteReview } = require('./databaseQueriesReviews');
 // --PROJECT---
 const { deleteUser, getPendingReviews, getAdminStats } = require('./databaseQueriesAdmin'); //import admin functions
-
+const { 
+    getBandByCredentials, getAllBandEvents, getBandRequests, 
+    updateRequestStatus, getMessages, sendMessage, addCalendarEvent, getAllBands, updateBand, deleteBand, getBandEarnings
+} = require('./databaseQueriesBands');
 const app = express();
 const PORT = 3000;
 
@@ -334,6 +335,7 @@ app.post('/band/login', async (req, res) => {
             req.session.loggedIn = true;
             req.session.isBand = true; //flag that this is a band login
             req.session.bandUsername = bands[0].username;
+            req.session.bandData = bands[0];
             res.status(200).json({ message: "Band login success" });
         } else {
             res.status(401).json({ error: "Invalid band credentials" });
@@ -342,6 +344,74 @@ app.post('/band/login', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+/*new dashboard routes for band*/
+
+//events for calendar + requests + chat + earnings
+app.get('/band/calendar_events', async (req, res) => {
+    if (!req.session.isBand) return res.status(403).json({ error: "Access denied" });
+    try {
+        const events = await getAllBandEvents(req.session.bandData.band_id);
+        res.json(events);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+//posthiki event sto calendar
+app.post('/band/add_event', async (req, res) => {
+    if (!req.session.isBand) return res.status(403).json({ error: "Access denied" });
+    try {
+        await addCalendarEvent({ //data apo databaseQueriesBands.js (omoios tetoia events kai se ala post get)
+            band_id: req.session.bandData.band_id,
+            title: req.body.title,
+            start: req.body.start
+        });
+        res.json({ message: "Event added" });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+//dexia meria gia ta requests (private public idk)
+app.get('/band/requests', async (req, res) => {
+    if (!req.session.isBand) return res.status(403).json({ error: "Access denied" });
+    try {
+        const reqs = await getBandRequests(req.session.bandData.band_id); //sindesi me to databaseQueriesBands.js
+        res.json(reqs);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+//enimerosi status ama einia accepted i rejected:
+app.put('/band/request/:id', async (req, res) => {
+    if (!req.session.isBand) return res.status(403).json({ error: "Access denied" });
+    try {
+        await updateRequestStatus(req.params.id, req.body.status);
+        res.json({ message: "Status updated" });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+//afou patisoume to chat button kai einai accepted to event, pernoume ta messages gia to sygkekrimeno event
+app.get('/band/messages/:id', async (req, res) => {
+    try {
+        const msgs = await getMessages(req.params.id);
+        res.json(msgs);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+app.post('/band/message', async (req, res) => {
+    try {
+        await sendMessage({ event_id: req.body.event_id, message: req.body.message });
+        res.json({ message: "Sent" });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+//gia ta earnings ton band
+app.get('/band/earnings', async (req, res) => {
+    if (!req.session.isBand) return res.status(403).json({ error: "Access denied" });
+    try {
+        const amount = await getBandEarnings(req.session.bandData.band_id);
+        res.json({ earnings: amount });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
