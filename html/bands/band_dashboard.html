@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Band Dashboard</title>
+    <!--calendar parmeno apo: https://fullcalendar.io/-->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <link rel="stylesheet" href="../../css/band_dash.css" />
+    <link rel="icon" type="image/x-icon" href="../music_note.png">
+
+    
+</head>
+<body>
+
+    <a href="band_profile.html" id="profileBtn">Show Profile</a>
+
+    <div class="left-panel">
+        <h2 style="margin-top:0;">Availability & Events</h2>
+        <div id="calendar"></div> <!--kalo to calendar!!  -->
+    </div>
+
+    <div class="right-panel">
+        <h2 style="margin-top:0;">Private Requests Management</h2>
+        <div id="requestsList">Loading requests...</div>
+    </div>
+    <!--gia ta earnings-->
+    <div class="sidebar">
+        <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background: #ffffff; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center; border: 1px solid #444;">
+            <span style="font-size: 0.9em; color: #000000; font-family: 'Segoe UI', sans-serif;">Total Earnings ;)</span><br>
+            <span style="font-size: 1.5em; color: #0df644; font-weight: bold; font-family: 'Segoe UI', sans-serif;">€<span id="earningsVal">0.00</span></span>
+        </div>
+    </div>
+    <!-- JavaScript-->
+    <script>
+        const API_BASE = 'http://localhost:3000/band';
+        /*arxikopiisi tou calendar*/
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek'
+                },
+                selectable: true, //ama kanei click se mera na borei, kai pio kato implement to saving date
+                dateClick: async function(info) {
+                    //on click, prosthethei ena public event (availability)
+                    let title = prompt('Set availability / Add public event title:');
+                    if (title) {
+                        await fetch(`${API_BASE}/add_event`, { //pame sto route tou backend add_event
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ title: title, start: info.dateStr })
+                        });
+                        calendar.refetchEvents();//e refresh (stigmieo) gia na doume ta dedomena pou apothikefsame stin mera
+                    }
+                },
+                events: `${API_BASE}/calendar_events`//prepei na paroume ta events apo to backend
+            });
+            calendar.render();
+        });
+
+        /*dexia meria gia ta requests(chat kai accept/reject)*/
+        async function loadRequests() {
+            const res = await fetch(`${API_BASE}/requests`);
+            const requests = await res.json();
+            const container = document.getElementById('requestsList');
+            container.innerHTML = '';
+
+            if(requests.length === 0) { //No requests
+                container.innerHTML = '<p>No pending requests.</p>';
+                return;
+            }
+
+            requests.forEach(r => {
+                let content = '';
+                /*SOS TA SXOLIA NA DEIS 3 GRAMMES KATO APO AFTIN*/
+                if (r.status === 'requested') {
+                    content = `
+                        <div class="request-card status-requested">
+                            <h3>Event Request: ${r.event_type}</h3>      <!-- Event request: TYPE -->
+                            <p><strong>User:</strong> ${r.user_name}</p> <!-- User: NAME -->
+                            <p><strong>Date:</strong> ${new Date(r.event_datetime).toLocaleString()}</p> <!-- Date: DATETIME -->
+                            <p><strong>Offer:</strong> €${r.price}</p>   <!-- Offer: PRICE -->
+                            <p><i>${r.event_description}</i></p>         <!-- Description: DESC -->
+                            <div style="margin-top:10px;">               <!-- Accept / Reject Buttons -->
+                                <button class="btn btn-accept" onclick="setStatus(${r.private_event_id}, 'to be done')">Accept</button>
+                                <button class="btn btn-reject" onclick="setStatus(${r.private_event_id}, 'rejected')">Reject</button>
+                            </div>
+                        </div>
+                    `;
+                } 
+                
+                else if (r.status === 'to be done') {
+                    content = `
+                        <div class="request-card status-tobedone">
+                            <h3>Booked: ${r.event_type} (Active)</h3> <!-- Booked: TYPE (Active) -->
+                            <p><strong>User:</strong> ${r.user_name} | <strong>Date:</strong> ${new Date(r.event_datetime).toLocaleDateString()}</p>
+                            
+                            <!-- 
+                            User: NAME | Date: DATE 
+                            kai apo kato button gia na anoiksei tin idi iparkti sinomilia apo database
+                            -->
+                            <button class="btn btn-chat" onclick="toggleChat(${r.private_event_id})">Open Chat / Negotiate</button>
+                            
+                            <!-- Chat Area -->
+                            <div id="chat_area_${r.private_event_id}" class="chat-container">
+                                <div id="msgs_${r.private_event_id}" class="messages-box">Loading...</div>
+                                <div style="display:flex;">
+                                    <input type="text" id="input_${r.private_event_id}" placeholder="Type message..." style="flex:1; padding:5px;">
+                                    <button onclick="sendMessage(${r.private_event_id})" style="padding:5px 10px; cursor:pointer;">Send</button>
+                                </div>
+                                <button class="btn btn-accept" style="width:100%; margin-top:5px; background:#333;" onclick="setStatus(${r.private_event_id}, 'done')">Mark as DONE (Finalize)</button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML += content;
+            });
+        }
+
+        //listeners/actions gia ta accept/reject/done
+        /*status allagi apo requested se to be done i rejected i apo to be done se done*/
+        async function setStatus(id, status) {
+            if(!confirm(`Change status to '${status}'?`)) return;
+            
+            await fetch(`${API_BASE}/request/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ status })
+            });
+            loadRequests();
+        }
+
+        /*emfanisi tou chat kai fortosi minimaton*/
+        function toggleChat(id) {
+            const el = document.getElementById(`chat_area_${id}`);
+            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+            if(el.style.display === 'block') {
+                loadMessages(id);
+                //esto kai na fortonei kathe 5 deuterolepta ta minima
+                if(!window.chatInterval) window.chatInterval = {};
+                if(window.chatInterval[id]) clearInterval(window.chatInterval[id]);
+                window.chatInterval[id] = setInterval(() => loadMessages(id), 5000);
+            }
+        }
+        /*fortosi minimaton apo to backend*/
+        async function loadMessages(eventId) {
+            const res = await fetch(`${API_BASE}/messages/${eventId}`);
+            const msgs = await res.json();
+            const box = document.getElementById(`msgs_${eventId}`);
+            box.innerHTML = '';
+            
+            msgs.forEach(m => { //gia kathe minima to vazei sto chat box
+                const type = (m.sender === 'band') ? 'band' : 'user';
+                box.innerHTML += `<div class="msg ${type}"><b>${m.sender}:</b> ${m.message}</div>`;
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+        /*apostoli minimaton*/
+        async function sendMessage(eventId) {
+            const input = document.getElementById(`input_${eventId}`);
+            const txt = input.value.trim();
+            if(!txt) return; //apla ama den yparxei minima, min to steilei(epistrefei)
+
+            await fetch(`${API_BASE}/message`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ event_id: eventId, message: txt })
+            });
+            input.value = '';
+            loadMessages(eventId);
+        }
+        /*kai makari telos gia to band: ta earnings*/
+        async function loadEarnings() {
+            const res = await fetch(`${API_BASE}/earnings`);
+            const data = await res.json();
+            document.getElementById('earningsVal').innerText = data.earnings;
+        }
+        loadEarnings();
+        loadRequests();
+
+    </script>
+</body>
+</html>
