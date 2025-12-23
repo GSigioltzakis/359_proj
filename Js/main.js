@@ -540,7 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
 
                 if (res.ok) {
-                    window.location.href = "../html/band_dashboard.html"; 
+                    window.location.href = "../bands/band_dashboard.html"; 
                 } else {
                     messageP.textContent = data.error;
                 }
