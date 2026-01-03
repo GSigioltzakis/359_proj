@@ -1,0 +1,249 @@
+:root{
+  --nav-h: 76px;
+  --gap: 16px;
+}
+
+body{
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  height: 100vh;
+  background: #f2f2f2;
+  overflow: hidden; /* scroll θα γίνει μέσα στα panels */
+}
+
+/* Header: δεν ακουμπάει ποτέ content */
+.top-nav{
+  
+  min-height: 120px;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  background: #1368c9;
+  color: #000000;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.brand{
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  margin-right: 10px;
+  white-space: nowrap;
+}
+
+.nav-left{
+  display: flex;
+  align-items: end;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.filters{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: end;
+  min-width: 0;
+}
+
+.filter{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  min-width: 150px;
+}
+
+.filter input,
+.filter select{
+  padding: 7px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: #1b1b1b;
+  color: #fff;
+  outline: none;
+}
+
+.btn-sm{
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: #2a2a2a;
+  color:#fff;
+  cursor:pointer;
+  height: 36px;
+}
+.btn-sm.btn-outline{ background: transparent; }
+
+/* Main area κάτω από nav με κενό */
+.page{
+  height: calc(100vh - var(--nav-h));
+  box-sizing: border-box;
+  padding: var(--gap);
+  display: flex;
+  gap: var(--gap);
+}
+
+/* Panels */
+.left-panel, .right-panel{
+  background: transparent;
+  min-width: 0;
+}
+
+.left-panel{
+  flex: 1.4;
+}
+
+.right-panel{
+  flex: 1;
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  overflow-y: auto;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+/* Calendar card: περιορίζει το μέγεθος */
+.calendar-card{
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+
+  /* εδώ το “δεν πιάνει όλη την οθόνη” */
+  max-width: 860px;     /* κόφτης πλάτους */
+  max-height: 650px;    /* κόφτης ύψους */
+  overflow: hidden;     /* να μην ξεφεύγει */
+}
+
+/* Το ίδιο το calendar να ταιριάζει στο card */
+#calendar{
+  height: 620px; /* λίγο μικρότερο από max-height */
+}
+
+/* Account dropdown */
+.account{ position: relative; }
+.account-btn{
+  background: #333;
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.account-menu{
+  position: absolute;
+  right: 0;
+  top: 44px;
+  width: 200px;
+  background: #106eea;
+  color: #111111;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  padding: 8px;
+  display: none;
+  z-index: 1000;
+}
+.account-menu a{
+  display: block;
+  padding: 10px 10px;
+  border-radius: 8px;
+  color: #111;
+  text-decoration: none;
+}
+.account-menu a:hover{ background: #f2f2f2; }
+.menu-sep{
+  height: 1px;
+  background: #e6e6e6;
+  margin: 6px 0;
+}
+.account.open .account-menu{ display: block; }
+
+
+.multi-select{
+  position: relative;
+  width: 220px;
+}
+
+.multi-btn{
+  width: 100%;
+  height: 36px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: #1b1b1b;
+  color: #fff;
+  cursor: pointer;
+}
+
+.multi-btn .caret{ opacity: 0.9; }
+
+.multi-menu{
+  position: absolute;
+  top: 42px;
+  left: 0;
+  width: 100%;
+  max-height: 260px;
+  overflow: auto;
+
+  background: #fff;
+  color: #111;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  padding: 8px;
+  display: none;
+  z-index: 2000;
+}
+
+.multi-select.open .multi-menu{ display: block; }
+
+.multi-item{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 8px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.multi-item:hover{ background:#f2f2f2; }
+
+.multi-item input{
+  width: 16px;
+  height: 16px;
+}
+
+.multi-actions{
+  display:flex;
+  gap: 8px;
+  padding: 8px;
+  border-top: 1px solid #e6e6e6;
+  margin-top: 6px;
+}
+
+.mini-btn{
+  flex:1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+}
+
+.mini-btn.primary{
+  background:#111;
+  color:#fff;
+  border-color:#111;
+}
