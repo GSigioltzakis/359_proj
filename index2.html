@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Band Dashboard</title>
+    <!--calendar parmeno apo: https://fullcalendar.io/-->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <link rel="stylesheet" href="css/index2.css" />
+    <link rel="icon" type="image/x-icon" href="../music_note.png">
+    
+</head>
+<body>
+    <header class="top-nav">
+        <div class="nav-left">
+            <span class="brand">Explore</span>
+        
+            <button id="sortBtn" class="account-btn" type="button">Ταξινόμηση ▾</button>
+            <button id="filtersBtn" class="account-btn" type="button">Φίλτρα ▾</button>
+
+            <!-- (προαιρετικό) Account dropdown όπως έχεις -->
+            <div class="account">
+            <button id="accountBtn" class="account-btn" type="button">Account ▾</button>
+            <div id="accountMenu" class="account-menu">
+                <a href="html/users/normal_login.html">Log in</a>
+                <a href="html/users/normal_signup.html">Sign up</a>
+                <div class="menu-sep"></div>
+                <a href="html/bands/band_user.html">Continue as Band</a>
+            </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="page">
+    <!-- ΑΡΙΣΤΕΡΑ: CALENDAR + RESULTS -->
+        <section class="left-col">
+            <div class="calendar-card">
+                <h3 class="panel-title">Public Events</h3>
+                <div id="calendar"></div>
+            </div>
+
+            <div class="results-card">
+                <h3 class="panel-title">Results</h3>
+                <div id="resultsList">Loading...</div>
+            </div>
+            <div class="map-card">
+
+                <div id="map" style="height:300px; width:600px; margin-top:-10px;"></div>
+    
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.5.2/ol.css">
+                <script src="https://cdn.jsdelivr.net/npm/ol@7.5.2/dist/ol.js"></script>
+            </div>
+            
+        </section>
+
+  <!-- ΔΕΞΙΑ: BAND CARDS -->
+  <aside class="right-col">
+    <div class="band-filters-card">
+    <h3 style="margin:0 0 10px 0;">Band Filters</h3>
+
+    <div class="bf-row">
+        <label class="bf">
+        <span>Πόλη</span>
+        <input id="bandCity" list="greekCities" placeholder="π.χ. Χανιά" />
+        </label>
+
+            <label class="bf">
+        <span>Έτος από</span>
+        <input id="bandYearFrom" type="number" min="1900" max="2100" placeholder="π.χ. 2010" />
+        </label>
+
+        <label class="bf">
+        <span>Έτος έως</span>
+        <input id="bandYearTo" type="number" min="1900" max="2100" placeholder="π.χ. 2020" />
+        </label>
+    </div>
+
+    <!-- Genres multi-select (checkbox dropdown) -->
+    <div class="bf">
+        <span>Είδη</span>
+        <div class="multi-select" id="bandGenreMulti">
+        <button type="button" class="multi-btn" id="bandGenreBtn">
+            <span id="bandGenreBtnText">Όλα τα είδη</span><span class="caret">▾</span>
+        </button>
+        <div class="multi-menu" id="bandGenreMenu">
+            <label class="multi-item"><input type="checkbox" value="traditional"> <span>Παραδοσιακά</span></label>
+            <label class="multi-item"><input type="checkbox" value="laiko"> <span>Λαϊκό</span></label>
+            <label class="multi-item"><input type="checkbox" value="entexno"> <span>Έντεχνο</span></label>
+            <label class="multi-item"><input type="checkbox" value="rock"> <span>Rock</span></label>
+            <label class="multi-item"><input type="checkbox" value="pop"> <span>Pop</span></label>
+            <label class="multi-item"><input type="checkbox" value="jazz"> <span>Jazz</span></label>
+
+            <div class="multi-actions">
+            <button type="button" class="mini-btn" id="bandGenresClear">Clear</button>
+            <button type="button" class="mini-btn primary" id="bandGenresDone">Done</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="bf-actions">
+        <button id="bandApply" class="primary-btn" type="button">Apply</button>
+        <button id="bandClear" class="ghost-btn" type="button">Clear</button>
+    </div>
+    </div>
+
+    <h3 class="panel-title">Bands</h3>
+    <div id="bandsGrid" class="bands-grid">Loading...</div>
+  </aside>
+</main>
+
+<!-- SORT MENU (dropdown) -->
+<div id="sortMenu" class="dropdown">
+  <button class="drop-item" data-sort="price_asc">Κόστος (αύξ.)</button>
+  <button class="drop-item" data-sort="price_desc">Κόστος (φθίν.)</button>
+  <button class="drop-item" data-sort="date_asc">Ημερομηνία (πιο σύντομα)</button>
+  <button class="drop-item" data-sort="date_desc">Ημερομηνία (πιο αργά)</button>
+  <button class="drop-item" data-sort="distance">Απόσταση (αν υπάρχει)</button>
+</div>
+
+<!-- FILTERS PANEL (drawer) -->
+<div id="filtersPanel" class="drawer">
+  <div class="drawer-header">
+    <div class="drawer-title">Filters</div>
+    <button id="closeFilters" class="icon-btn" type="button">✕</button>
+  </div>
+
+  <div class="drawer-body">
+    <!-- Εδώ βάζεις τα φίλτρα που ήδη έχεις (genres multi, city, dates, maxPrice, search) -->
+    <label class="f">
+      <span>Πόλη</span>
+      <input id="cityInput" placeholder="π.χ. Αθήνα" />
+    </label>
+
+    <label class="f">
+      <span>Από</span>
+      <input id="dateFrom" type="date" />
+    </label>
+
+    <label class="f">
+      <span>Έως</span>
+      <input id="dateTo" type="date" />
+    </label>
+
+    <label class="f">
+      <span>Max €</span>
+      <input id="maxPrice" type="number" min="0" step="1" placeholder="π.χ. 50" />
+    </label>
+
+    <label class="f">
+      <span>Search</span>
+      <input id="textSearch" placeholder="title/description" />
+    </label>
+
+    <!-- Genres multi-select: κράτα το δικό σου component εδώ -->
+    <div class="f">
+      <span>Είδη</span>
+      <div class="multi-select" id="genreMulti">
+        <button type="button" class="multi-btn" id="genreBtn">
+          <span id="genreBtnText">Όλα τα είδη</span><span class="caret">▾</span>
+        </button>
+        <div class="multi-menu" id="genreMenu">
+          <label class="multi-item"><input type="checkbox" value="rock"> <span>Rock</span></label>
+          <label class="multi-item"><input type="checkbox" value="pop"> <span>Pop</span></label>
+          <label class="multi-item"><input type="checkbox" value="laiko"> <span>Λαϊκό</span></label>
+          <label class="multi-item"><input type="checkbox" value="entexno"> <span>Έντεχνο</span></label>
+          <div class="multi-actions">
+            <button type="button" class="mini-btn" id="genresClear">Clear</button>
+            <button type="button" class="mini-btn primary" id="genresDone">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-actions">
+      <button id="applyBtn" class="primary-btn" type="button">Apply</button>
+      <button id="clearBtn" class="ghost-btn" type="button">Clear</button>
+    </div>
+  </div>
+</div>
+
+<!-- overlay για drawer -->
+<div id="overlay" class="overlay"></div>
+
+    <footer class="site-footer" id="siteFooter">
+        <button class="footer-toggle" id="footerToggle" type="button" aria-expanded="false">
+            Extra info & links ▾
+        </button>
+
+        <div class="footer-content" id="footerContent">
+            <div class="footer-col">
+            <div class="footer-title">Πρόβλεψη/Παρακολούθηση Πυρκαγιών</div>
+            <a class="footer-link" href="https://civilprotection.gov.gr/en/xartis" target="_blank" rel="noopener noreferrer">
+                Χάρτης Πρόβλεψης Κινδύνου Πυρκαγιάς (Πολιτική Προστασία)
+            </a>
+            <a class="footer-link" href="https://forest-fire.emergency.copernicus.eu/apps/effis_current_situation/" target="_blank" rel="noopener noreferrer">
+                Copernicus EFFIS – Current situation / fire danger
+            </a>
+            <a class="footer-link" href="https://firms.modaps.eosdis.nasa.gov/map/" target="_blank" rel="noopener noreferrer">
+                NASA FIRMS – Active fires map (near real-time)
+            </a>
+            <a class="footer-link" href="https://www.windy.com/-Fire-spread-fwi" target="_blank" rel="noopener noreferrer">
+                Windy – Fire spread / fire danger layer
+            </a>
+            </div>
+
+            <div class="footer-col">
+            <div class="footer-title">Παρόμοια sites (εκδηλώσεις/μουσική)</div>
+            <a class="footer-link" href="https://www.more.com/gr-en/tickets/music/" target="_blank" rel="noopener noreferrer">
+                more.com – Music tickets (GR)
+            </a>
+            <a class="footer-link" href="https://www.songkick.com/metro-areas/28976-greece-athens" target="_blank" rel="noopener noreferrer">
+                Songkick – Concerts in Athens
+            </a>
+            <a class="footer-link" href="https://ra.co/events/gr/all" target="_blank" rel="noopener noreferrer">
+                Resident Advisor – Events in Greece
+            </a>
+            <a class="footer-link" href="https://www.bandsintown.com/" target="_blank" rel="noopener noreferrer">
+                Bandsintown – Live music discovery
+            </a>
+            <a class="footer-link" href="https://open.spotify.com/concerts/location/264371-Athens-GR" target="_blank" rel="noopener noreferrer">
+                Spotify Concerts – Athens
+            </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Floating Music Assistant -->
+    <button id="musicFab" class="music-fab" type="button">💬 Ρώτα για μουσική</button>
+
+    <div id="musicDrawer" class="music-drawer">
+        <div class="music-head">
+            <div class="music-title">Music Assistant</div>
+            <button id="musicClose" class="icon-btn" type="button">✕</button>
+        </div>
+
+        <div class="music-suggestions">
+            <div class="sug-title">Δοκίμασε:</div>
+            <button class="sug" data-q="Τι είναι το blues scale και πώς το χρησιμοποιώ;">Blues scale</button>
+            <button class="sug" data-q="Δώσε μου 4 εύκολες chord progressions σε minor.">Chord progressions</button>
+            <button class="sug" data-q="Ποια η διαφορά 4/4 και 6/8;">4/4 vs 6/8</button>
+            <button class="sug" data-q="Tips για setlist σε live 45 λεπτών;">Setlist tips</button>
+        </div>
+
+        <div id="musicMsgs" class="music-msgs"></div>
+
+        <div class="music-input">
+            <input id="musicText" placeholder="Γράψε την ερώτησή σου..." />
+            <button id="musicSend" type="button">Send</button>
+        </div>
+        </div>
+
+        <div id="musicOverlay" class="overlay"></div>
+
+    <!-- JavaScript-->
+    <script>
+        // Sort dropdown
+        const sortBtn = document.getElementById('sortBtn');
+        const sortMenu = document.getElementById('sortMenu');
+
+        sortBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sortMenu.classList.toggle('open');
+        });
+
+        document.addEventListener('click', () => {
+        sortMenu.classList.remove('open');
+        });
+
+        // Filters drawer
+        const filtersBtn = document.getElementById('filtersBtn');
+        const filtersPanel = document.getElementById('filtersPanel');
+        const closeFilters = document.getElementById('closeFilters');
+        const overlay = document.getElementById('overlay');
+
+        function openFilters(){
+        filtersPanel.classList.add('open');
+        overlay.classList.add('open');
+        }
+        function closeFiltersFn(){
+        filtersPanel.classList.remove('open');
+        overlay.classList.remove('open');
+        }
+
+        filtersBtn.addEventListener('click', openFilters);
+        closeFilters.addEventListener('click', closeFiltersFn);
+        overlay.addEventListener('click', closeFiltersFn);
+        // Sort επιλογές (απλά αποθηκεύουμε το active sort προς το παρόν)
+        let activeSort = "date_asc";
+        document.querySelectorAll('#sortMenu .drop-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            activeSort = btn.dataset.sort;
+            sortMenu.classList.remove('open');
+            // στο Βήμα 3 θα κάνουμε applySort+rerender
+            console.log("Sort:", activeSort);
+        });
+        });
+
+        // Demo render bands (στο Βήμα 3 θα έρθουν από fetch)
+        function renderBands(bands){
+        const grid = document.getElementById('bandsGrid');
+        grid.innerHTML = bands.map(b => `
+            <div class="band-card" onclick="location.href='band_profile.html?id=${b.id}'">
+            <img src="${b.image_url || 'images/band_placeholder.png'}" alt="band">
+            <div class="b">
+                <div class="name">${b.name}</div>
+                <div class="meta">${b.city || ''} • ${b.founded_year || ''}</div>
+            </div>
+            </div>
+        `).join('');
+        }
+
+        // προσωρινά dummy
+        renderBands([
+        {id:1, name:"Band A", city:"Αθήνα", founded_year:2016, image_url:""},
+        {id:2, name:"Band B", city:"Ηράκλειο", founded_year:2012, image_url:""},
+        ]);
+
+        // Account menu toggle
+        const account = document.querySelector('.account');
+        const accountBtn = document.getElementById('accountBtn');
+        // Toggle menu on button click
+        accountBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        account.classList.toggle('open');
+        });
+        // Close menu on outside click
+
+        document.addEventListener('click', () => {
+        account.classList.remove('open');
+        });
+        const API_BASE = 'http://localhost:3000/band';
+        let allPublicEvents = []; //gia na krataei ola ta public events gia ta filters
+        let calendar; //gia na exoume prosbasi sto calendar apo diafora functions
+        function normalize(s) {
+            return (s ?? '').toString().trim().toLowerCase();
+        }
+        function getSelectedGenres() {
+            const checkboxes = document.querySelectorAll('#genreMenu input[type="checkbox"]');
+            const selected = [];
+            checkboxes.forEach(cb => {
+                if (cb.checked) selected.push(normalize(cb.value));
+            });
+            return selected;
+        }
+        // Aktualopoiisi tou text sto genre button
+        function updateGenreButtonText() {
+            const selected = getSelectedGenres();
+            const textEl = document.getElementById('genreBtnText');
+            // An den exei epilexthei tipota
+            if (selected.length === 0) {
+                textEl.textContent = 'Όλα τα είδη';
+                return;
+            }
+
+            // Αν είναι λίγα, δείξτα. Αν είναι πολλά, δείξε count.
+            if (selected.length <= 2) {
+                textEl.textContent = selected.join(', ');
+            } else {
+                textEl.textContent = `${selected.length} selected`;
+            }
+        }
+        //open / close tou multi-select menu
+        const genreBtn = document.getElementById('genreBtn');
+        const genreMenu = document.getElementById('genreMenu');
+        genreBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            genreMulti.classList.toggle('open');
+        });
+        //close to menu otan kanei click ektos
+        document.addEventListener('click', () => {
+            genreMulti.classList.remove('open');
+        });
+        // Elements gia to multi-select
+        const genreMulti = document.getElementById('genreMulti');
+        const genresClear = document.getElementById('genresClear');
+        const genresDone = document.getElementById('genresDone');
+
+        
+        // Clear / Done buttons
+        genresClear.addEventListener('click', () => {
+        document.querySelectorAll('#genreMenu input[type="checkbox"]').forEach(cb => cb.checked = false);
+        updateGenreButtonText();
+        applyFilters(); //kanei apply ta filters amesws
+        });
+
+        genresDone.addEventListener('click', () => {
+        updateGenreButtonText();
+        genreMulti.classList.remove('open');
+        applyFilters(); //kanei apply ta filters amesws
+        });
+
+        document.querySelectorAll('#genreMenu input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                updateGenreButtonText();
+                
+            });
+        });
+
+            // initial
+        updateGenreButtonText();
+        
+
+
+        // Βοηθητική συνάρτηση για μετατροπή ημερομηνίας σε timestamp (χωρίς ώρα)
+        function dateOnlyTs(d) {
+            const x = new Date(d);
+            if (isNaN(x.getTime())) return null;
+            return new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+        }
+
+        async function fetchPublicEvents() {
+            // EXPECTED endpoint: GET /user/public_events
+            // returns array of events with at least:
+            // { id, title, start, end?, city?, genre?, venue?, description?, price? }
+            const res = await fetch(`${API_BASE}/public_events`);
+            allPublicEvents = await res.json();
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const genre = getSelectedGenres(); //array
+            const city = normalize(document.getElementById('cityInput').value);
+            const fromVal = document.getElementById('dateFrom').value;
+            const toVal = document.getElementById('dateTo').value;
+            const maxPrice = document.getElementById('maxPrice').value ? Number(document.getElementById('maxPrice').value) : Infinity;
+            const q = normalize(document.getElementById('textSearch').value);
+
+            const fromTs = fromVal ? dateOnlyTs(fromVal) : null;
+            const toTs = toVal ? dateOnlyTs(toVal) : null;
+
+            const filtered = allPublicEvents.filter(ev => {
+                // genre (αν υπάρχει)
+                if (genre.length) {
+                    const g = normalize(ev.genre);
+                    if (!genre.includes(g)) return false;
+                }
+
+                // city Greece-only
+                if (city) {
+                    const c = normalize(ev.city);
+                    if (!c.includes(city)) return false;
+                }
+
+                // date range: compare start
+                const evTs = dateOnlyTs(ev.start);
+                if (fromTs && evTs !== null && evTs < fromTs) return false;
+                if (toTs && evTs !== null && evTs > toTs) return false;
+
+                // price
+                const price = Number(ev.price ?? 0);
+                if (price > maxPrice) return false;
+
+                // free text
+                if (q) {
+                const hay = `${ev.title ?? ''} ${ev.venue ?? ''} ${ev.description ?? ''} ${ev.city ?? ''}`.toLowerCase();
+                if (!hay.includes(q)) return false;
+                }
+
+                return true;
+            });
+            // update calendar events
+            calendar.removeAllEvents();
+            filtered.forEach(ev => {
+                calendar.addEvent({
+                id: ev.id,
+                title: ev.title,
+                start: ev.start,
+                end: ev.end,
+                extendedProps: ev
+                });
+            });
+
+            // update results list (optional)
+            renderResultsList(filtered);
+        }
+        // Render tin lista me ta apotelesmata
+        function renderResultsList(events) {
+        const box = document.getElementById('resultsList');
+        if (!events.length) {
+            box.innerHTML = '<p>No matching events.</p>';
+            return;
+        }
+        // Sort by date
+        box.innerHTML = events
+            .sort((a,b) => new Date(a.start) - new Date(b.start))
+            .map(ev => {
+            const when = new Date(ev.start).toLocaleString();
+            const city = ev.city ? ` • ${ev.city}` : '';
+            const price = (ev.price != null) ? ` • €${ev.price}` : '';
+            const genre = ev.genre ? ` • ${ev.genre}` : '';
+            return `
+                <div class="event-card">
+                <div class="event-title">${ev.title}</div>
+                <div class="event-meta">${when}${city}${genre}${price}</div>
+                ${ev.venue ? `<div class="event-meta">Venue: ${ev.venue}</div>` : ''}
+                ${ev.description ? `<div class="event-desc">${ev.description}</div>` : ''}
+                </div>
+            `;
+            })
+            .join('');
+        }
+
+
+        /*arxikopiisi tou calendar*/
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek'
+                },
+                 // USER: read-only
+                selectable: false,
+                editable: false,
+                eventStartEditable: false,
+                eventDurationEditable: false,
+
+                eventClick: function(info) {
+                const ev = info.event.extendedProps;
+                const lines = [
+                    `Title: ${info.event.title}`,
+                    `When: ${new Date(info.event.start).toLocaleString()}`,
+                    ev.city ? `City: ${ev.city}` : null,
+                    ev.venue ? `Venue: ${ev.venue}` : null,
+                    ev.genre ? `Genre: ${ev.genre}` : null,
+                    (ev.price != null) ? `Price: €${ev.price}` : null,
+                    ev.description ? `Description: ${ev.description}` : null,
+                ].filter(Boolean);
+                alert(lines.join('\n'));
+                }
+            });
+            calendar.render();
+            fetchPublicEvents();
+        });
+
+        document.getElementById('applyBtn').addEventListener('click', applyFilters);
+        document.getElementById('clearBtn').addEventListener('click', () => {
+        document.querySelectorAll('#genreMenu input[type="checkbox"]').forEach(cb => cb.checked = false);
+        updateGenreButtonText();
+        document.getElementById('cityInput').value = '';
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        document.getElementById('maxPrice').value = '';
+        document.getElementById('textSearch').value = '';
+        applyFilters();
+        });
+
+        ['cityInput','dateFrom','dateTo','maxPrice','textSearch']
+        .forEach(id => document.getElementById(id).addEventListener('input', applyFilters));
+
+        //footer toggle
+        const footer = document.getElementById('siteFooter');
+        const footerToggle = document.getElementById('footerToggle');
+
+        footerToggle.addEventListener('click', () => {
+        const open = footer.classList.toggle('open');
+        footerToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+        // αν ανοίξει more padding
+        document.body.style.paddingBottom = open ? '220px' : '44px';
+        });
+
+        // Music Assistant drawer
+        const musicFab = document.getElementById('musicFab');
+        const musicDrawer = document.getElementById('musicDrawer');
+        const musicClose = document.getElementById('musicClose');
+        const musicOverlay = document.getElementById('musicOverlay');
+
+        function openMusic(){
+        musicDrawer.classList.add('open');
+        musicOverlay.classList.add('open');
+        }
+        function closeMusic(){
+        musicDrawer.classList.remove('open');
+        musicOverlay.classList.remove('open');
+        }
+
+        musicFab.addEventListener('click', openMusic);
+        musicClose.addEventListener('click', closeMusic);
+        musicOverlay.addEventListener('click', closeMusic);
+
+        // suggestions
+        document.querySelectorAll('.sug').forEach(b=>{
+        b.addEventListener('click', ()=>{
+            document.getElementById('musicText').value = b.dataset.q;
+            sendMusic();
+        });
+        });
+
+        function addMsg(text, who){
+        const box = document.getElementById('musicMsgs');
+        const div = document.createElement('div');
+        div.className = `msg ${who}`;
+        div.textContent = text;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+        }
+
+        async function sendMusic(){
+        const input = document.getElementById('musicText');
+        const q = input.value.trim();
+        if(!q) return;
+
+        addMsg(q, 'user');
+        input.value = '';
+
+        // TODO: εδώ θα καλέσεις backend endpoint /music/ask
+        // const res = await fetch('/music/ask', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({question:q})});
+        // const data = await res.json();
+        // addMsg(data.answer, 'bot');
+
+        // προσωρινό:
+        addMsg("Απάντηση από LLM θα εμφανιστεί εδώ (όταν συνδέσουμε το endpoint).", 'bot');
+        }
+
+        document.getElementById('musicSend').addEventListener('click', sendMusic);
+        document.getElementById('musicText').addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter') sendMusic();
+        });
+
+
+        //code for band filters on the right column 
+        function normalize(s){ return (s ?? '').toString().trim(); }
+        // get selected genres from band genre multi-select
+        function getBandGenres(){
+        return Array.from(document.querySelectorAll('#bandGenreMenu input[type="checkbox"]:checked'))
+            .map(cb => cb.value.trim().toLowerCase());
+        }
+        // update band genre button text
+        function updateBandGenreBtnText(){
+            const selected = getBandGenres();
+            const textEl = document.getElementById('bandGenreBtnText');
+
+            if (!selected.length) textEl.textContent = 'Όλα τα είδη';
+            else if (selected.length <= 2) textEl.textContent = selected.join(', ');
+            else textEl.textContent = `${selected.length} selected`;
+        }
+        // function that builds the query string for band filters
+        function buildBandQuery(){
+            const city = normalize(document.getElementById('bandCity').value);
+            const yearFrom = normalize(document.getElementById('bandYearFrom').value);
+            const yearTo = normalize(document.getElementById('bandYearTo').value);
+            const genres = getBandGenres();
+
+            const p = new URLSearchParams();
+            if (city) p.set('city', city);
+            if (yearFrom) p.set('year_from', yearFrom);
+            if (yearTo) p.set('year_to', yearTo);
+            if (genres.length) p.set('genres', genres.join(','));
+            return p.toString();
+        }
+        async function loadBands(){
+            const qs = buildBandQuery();
+            const res = await fetch(`${API_BASE}/bands?${qs}`);
+            const bands = await res.json();
+            renderBands(bands); // η δική σου renderBands που φτιάχνει cards
+        }
+
+        // --- dropdown open/close για band genres ---
+        const bandGenreMulti = document.getElementById('bandGenreMulti');
+        document.getElementById('bandGenreBtn').addEventListener('click', (e)=>{
+            e.stopPropagation();
+            bandGenreMulti.classList.toggle('open'); });
+        document.addEventListener('click', ()=> bandGenreMulti.classList.remove('open'));
+        // clear / done buttons
+        document.getElementById('bandGenresClear').addEventListener('click', ()=>{
+            document.querySelectorAll('#bandGenreMenu input[type="checkbox"]').forEach(cb => cb.checked = false);
+            updateBandGenreBtnText();
+            loadBands(); // fortonei amesws
+        });
+        document.getElementById('bandGenresDone').addEventListener('click', ()=>{
+            updateBandGenreBtnText();
+            bandGenreMulti.classList.remove('open');
+            loadBands(); // fortonei amesws
+        });
+        // initial
+        document.getElementById('bandApply').addEventListener('click', loadBands);
+        document.getElementById('bandClear').addEventListener('click', ()=>{
+            document.getElementById('bandCity').value = '';
+            document.getElementById('bandYearFrom').value = '';
+            document.getElementById('bandYearTo').value = '';
+            document.querySelectorAll('#bandGenreMenu input[type="checkbox"]').forEach(cb => cb.checked = false);
+            updateBandGenreBtnText();
+            loadBands();
+        }); 
+        updateBandGenreBtnText();
+
+
+        //code for map and pins 
+        
+        // 1) Create map (OSM)
+        const map = new ol.Map({
+            target: 'map',
+            layers: [
+            new ol.layer.Tile({
+                source: new ol.source.OSM()
+            })
+            ],
+            view: new ol.View({
+            center: ol.proj.fromLonLat([21.7346, 38.2466]), // Greece-ish (lon, lat)
+            zoom: 6
+            })
+        });
+
+        // 2) Markers layer
+        const vectorSource = new ol.source.Vector();
+        const markersLayer = new ol.layer.Vector({ source: vectorSource });
+        map.addLayer(markersLayer);
+
+        // Marker style (pin-ish circle)
+        const markerStyle = new ol.style.Style({
+            image: new ol.style.Circle({
+            radius: 7,
+            fill: new ol.style.Fill({ color: '#e11d48' }),
+            stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+            })
+        });
+
+        async function loadFutureEvents() {
+            // REST endpoint που επιστρέφει future events με lat/lng
+            // π.χ. GET /public_events/map
+            const res = await fetch('http://localhost:3000/public_events/map');
+            const events = await res.json();
+
+            vectorSource.clear();
+
+            events.forEach(ev => {
+            if (ev.lat == null || ev.lng == null) return;
+
+            const feature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([ev.lng, ev.lat])),
+                ev: ev
+            });
+
+            feature.setStyle(markerStyle);
+            vectorSource.addFeature(feature);
+            });
+
+            // zoom σε όλα τα pins αν υπάρχουν
+            if (vectorSource.getFeatures().length) {
+            const extent = vectorSource.getExtent();
+            map.getView().fit(extent, { padding: [20,20,20,20], maxZoom: 14 });
+            }
+        }
+
+        // 3) Simple click popup using browser alert (εύκολο)
+        map.on('singleclick', function (evt) {
+            map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+            const ev = feature.get('ev');
+            const when = new Date(ev.start).toLocaleString();
+            alert(`${ev.title}\n${when}\n${ev.city || ''} • ${ev.genre || ''}`);
+            });
+        });
+
+        loadFutureEvents();
+
+    </script>
+</body>
+</html>
