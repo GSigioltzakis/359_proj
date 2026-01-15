@@ -78,6 +78,35 @@
           </p>
         </div>
       </section>
+      <section class="reviews-container">
+    <h2>Reviews</h2>
+    <div id="reviewsList">Loading reviews...</div>
+
+    <div class="add-review-box" style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
+        <h3>Leave a Review</h3>
+        <select id="ratingSelect" style="display: block; margin-bottom: 10px;">
+            <option value="5">5 Stars</option>
+            <option value="4">4 Stars</option>
+            <option value="3">3 Stars</option>
+            <option value="2">2 Stars</option>
+            <option value="1">1 Star</option>
+        </select>
+        <textarea id="reviewText" placeholder="Write your review here..." style="width:100%; height:80px;"></textarea>
+        <button onclick="checkAndSubmitReview()" class="primary-btn">Submit</button>
+    </div>
+    </section>
+
+    <div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000;">
+        <div style="background:white; width:350px; margin:15% auto; padding:25px; border-radius:12px; text-align:center; position:relative;">
+            <span onclick="closeModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:20px; font-weight:bold;">&times;</span>
+            <h3 style="color:#333;">Login Required</h3>
+            <p style="color:#666;">You must be logged in to leave a review!</p>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+                <a href="/users/normal_login.html" class="primary-btn" style="text-decoration:none;">Login</a>
+                <a href="/users/normal_register.html" class="secondary-btn" style="text-decoration:none; color:#333; border:1px solid #ccc; padding:8px; border-radius:5px;">Sign Up</a>
+            </div>
+        </div>
+    </div>
 
       <!-- RIGHT: calendar -->
       <aside class="card">
@@ -140,8 +169,7 @@
   function qs(name){ return new URLSearchParams(location.search).get(name); }
   function esc(s){ return (s ?? '').toString().replaceAll('<','&lt;').replaceAll('>','&gt;'); }
 
-  // ---- ids ----
-  const bandId = Number(qs('id'));   // ΜΟΝΟ ΕΔΩ bandId
+
 
   // ---- auth ----
   let authState = { loggedIn:false, userData:null };
@@ -369,5 +397,99 @@
   }
 
   document.addEventListener('DOMContentLoaded', init);
+
+  // ---- reviews ----
+  
+  // 1. Σωστή λήψη του ονόματος από το URL
+const urlParams = new URLSearchParams(window.location.search);
+const bandId = Number(urlParams.get('id'));
+
+console.log("Current Band ID from URL:", bandId);
+
+async function loadReviews() {
+  const list = document.getElementById('reviewsList');
+  if (!bandId) {
+    list.innerHTML = '<p>Error: Band ID missing from URL.</p>';
+    return;
+  }
+
+  try {
+  // 2. Fetch και μετατροπή σε JSON
+    const res = await fetch(`${API}/api/reviews-by-id/${bandId}`, { credentials: 'include' });
+    if (!res.ok) throw new Error("Could not fetch reviews");
+    const reviews = await res.json(); 
+
+    // 3. Έλεγχος αν υπάρχουν κριτικές
+    if (!reviews || reviews.length === 0) {
+      list.innerHTML = '<p>No reviews yet. Be the first to write one!</p>';
+    return;
+    }
+
+    // 4. Εμφάνιση των κριτικών
+  list.innerHTML = reviews.map(r => `
+    <div style="border-bottom:1px solid #ddd; padding:10px 0; margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between;">
+          <strong>${r.sender || 'Anonymous'}</strong>
+          <span style="color:#f39c12;">${'★'.repeat(r.rating || 5)}</span>
+        </div>
+        <p style="margin: 5px 0;">${r.review}</p>
+        <small style="color:gray;">${new Date(r.date_time).toLocaleDateString('el-GR')}</small>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error("Load Reviews Error:", err);
+    list.innerHTML = '<p>Error loading reviews.</p>';
+  }
+}
+
+// fortosi reviews
+async function checkAndSubmitReview() {
+    if (!authState.loggedIn) {
+      document.getElementById('loginModal').style.display = 'block';
+      return;
+    }
+    // submit review
+    const reviewText = document.getElementById('reviewText').value.trim();
+    const rating = parseInt(document.getElementById('ratingSelect').value, 10);
+
+    if (reviewText.length === 0) {
+      alert('Please write a review before submitting.');
+      return;
+    }
+    if (!bandId) {
+        alert('Error: Band ID is missing from the URL.');
+        return;
+    }
+    // ftiaxe to payload kai kane to POST
+    const payload = {
+      band_id: bandId,
+      review: reviewText,
+      rating: rating
+    };
+
+    const res = await fetch(`${API}/api/reviews`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    // checkare to apotelesma
+    if (!res.ok) {
+      const data = await res.json();
+      alert(data.error || 'Failed to submit review.');
+      return;
+    }
+
+    document.getElementById('reviewText').value = '';
+    loadReviews();
+  }
+  // fortosi reviews otan fortwsei i selida
+  function closeModal() {
+    document.getElementById('loginModal').style.display = 'none';
+  }
+
+
+loadReviews();
+
 </script>
 </html>

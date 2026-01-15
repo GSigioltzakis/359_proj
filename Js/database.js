@@ -157,7 +157,7 @@ async function dropDatabase() {
   }
 }
 
-module.exports = { initDatabase, dropDatabase };
+module.exports = { initDatabase, dropDatabase, getConnection };
 
 // 👉 Κάλεσε το function όταν θες
 // createDatabaseAndUsersTable();

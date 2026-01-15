@@ -11,7 +11,7 @@ const cors = require('cors');
 const { initDatabase, dropDatabase } = require('./database');
 const { insertUser, insertBand } = require('./databaseInsert');
 const { getAllUsers, getUserByCredentials, checkExistence, updateUser } = require('./databaseQueriesUsers');
-const { createReview, getReviews, updateReviewStatus, deleteReview } = require('./databaseQueriesReviews');
+const { getConnection, createReview, getReviews, updateReviewStatus, deleteReview } = require('./databaseQueriesReviews');
 // --PROJECT---
 const { deleteUser, getPendingReviews, getAdminStats } = require('./databaseQueriesAdmin'); //import admin functions
 const { 
@@ -201,7 +201,7 @@ app.get('/dropdb', async (req, res) => {
 
 //post
 app.post('/review/', async (req, res) => {
-    const { band_name, sender, review, rating } = req.body;
+    const { band_id, sender, review, rating } = req.body;
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
         return res.status(406).json({ message: "Rating must be an integer between 1 and 5." });
     }
@@ -585,8 +585,62 @@ app.get('/api/bands/:id/availability', async (req, res) => {
   }
 });
 
+// routes for reviews 
+const reviewsDB = require('./databaseQueriesReviews');
+app.get('/api/reviews/:band_id', async (req, res) => {
+    try{
+        const reviews = await reviewsDB.getReviews(req.params.band_id);
+        res.json(reviews);
+
+    }catch (err){
+        res.status(500).json({error: err.message});
+    }
+});
+app.post('/api/reviews', async (req, res) => {
+    if (!req.session.loggedIn) return res.status(401).json({ error: "Unauthorized" });
+
+    const { band_id, review, rating } = req.body; // Παίρνουμε το ID πλέον
+
+    try {
+        const conn = await getConnection();
+        
+        // find name of band by id 
+        const [band] = await conn.execute('SELECT band_name FROM bands WHERE band_id = ?', [band_id]);
+        if (band.length === 0) return res.status(404).json({ error: "Band not found" });
+        
+        const bandName = band[0].band_name;
+
+        // Insert me names
+        const query = `INSERT INTO reviews (band_name, sender, review, rating, status, date_time) VALUES (?, ?, ?, ?, 'pending', NOW())`;
+        await conn.execute(query, [
+            bandName,
+            req.session.userData.username,
+            review,
+            rating
+        ]);
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 
+app.get('/api/reviews-by-id/:id', async (req, res) => {
+    try {
+        const conn = await getConnection();
+        // Join για να βρούμε τις κριτικές της μπάντας μέσω του ID της
+        const query = `
+            SELECT r.* FROM reviews r
+            JOIN bands b ON r.band_name = b.band_name
+            WHERE b.band_id = ? AND r.status = 'published'
+        `;
+        const [rows] = await conn.execute(query, [req.params.id]);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 
 console.log("ROUTES:");
