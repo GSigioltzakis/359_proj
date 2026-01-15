@@ -375,9 +375,32 @@ function calcPrivatePrice(type){
   return 500;
 }
 
-// user creates private event request
+// user creates private event request 
+//checks if band is already booked 
 async function createPrivateEventRequest(data){
   const conn = await getConnection();
+  //check if band is available at that datetime
+  const checkSql = `
+    SELECT COUNT(*) AS count FROM (
+    SELECT event_datetime FROM public_events 
+    WHERE band_id = ? AND event_datetime = ?
+    UNION ALL
+    SELECT event_datetime FROM private_events 
+    WHERE band_id = ? AND event_datetime = ? AND (status = 'to be done')
+    ) AS busy_dates
+  `;
+  const [checkRows] = await conn.execute(checkSql, [ 
+    data.band_id,
+    data.event_datetime,
+    data.band_id,
+    data.event_datetime
+  ]);
+
+  if (checkRows[0].count > 0) {
+    throw new Error('Band is already booked at this time.');
+  }
+  // now that we know band is available, insert the request
+  // find the price based on event type
   const price = calcPrivatePrice(data.event_type);
 
   const sql = `

@@ -411,12 +411,14 @@ app.put('/band/request/:id', async (req, res) => {
 });
 
 //afou patisoume to chat button kai einai accepted to event, pernoume ta messages gia to sygkekrimeno event
-app.get('/band/messages/:id', async (req, res) => {
+app.get('/band/messages/:eventId', async (req, res) => {
     try {
-        const msgs = await getMessages(req.params.id);
+        const eventId = req.params.eventId;
+        const msgs = await getMessages(eventId);
         res.json(msgs);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
+
 app.post('/band/message', async (req, res) => {
     try {
         await sendMessage({ event_id: req.body.event_id, message: req.body.message });

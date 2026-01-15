@@ -682,7 +682,7 @@ body {
 
 .ticket-pay{ margin-top: 12px; display:flex; justify-content:flex-end; }
 
-.ticket-msg{ margin-top: 10px; font-size: 13px; color:#333; }
+.ticket-msg{ margin-top: 10px; font-size: 13px; color:#833434; }
 
 #ticketOverlay.overlay{ z-index: 1999; }
 
@@ -695,5 +695,5 @@ body {
 /* Highlight booked private */
 .ticket-card.confirmed {
     border-left: 4px solid #3b82f6;
-    background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(18, 24, 38, 1) 100%);
+    background:  rgb(210, 230, 250);
 }
