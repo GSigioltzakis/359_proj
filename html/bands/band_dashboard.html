@@ -154,8 +154,16 @@
             box.innerHTML = '';
             
             msgs.forEach(m => { //gia kathe minima to vazei sto chat box
-                const type = (m.sender === 'band') ? 'band' : 'user';
-                box.innerHTML += `<div class="msg ${type}"><b>${m.sender}:</b> ${m.message}</div>`;
+                const isBand = (m.sender === 'band');
+                const align = isBand ? 'text-align:right;' : 'text-align:left;';
+                const color = isBand ? '#dcfce7' : '#f1f5f9'; 
+                box.innerHTML += `
+                <div style="${align} margin-bottom:10px;">
+                    <div style="display:inline-block; padding:8px 12px; border-radius:12px; background:${color}; color:#000; max-width:80%;">
+                        <small style="display:block; font-weight:bold; opacity:0.7;">${m.sender}</small>
+                        ${m.message}
+                    </div>
+                </div>`;
             });
             box.scrollTop = box.scrollHeight;
         }
@@ -168,7 +176,7 @@
             await fetch(`${API_BASE}/message`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ event_id: eventId, message: txt })
+                body: JSON.stringify({ event_id: eventId, message: txt, sender: 'band' })
             });
             input.value = '';
             loadMessages(eventId);

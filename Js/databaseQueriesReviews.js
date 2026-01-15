@@ -19,18 +19,18 @@ async function createReview(reviewData) {
     const conn = await getConnection();
     
     //check if band exists first
-    const [bandRows] = await conn.execute('SELECT * FROM bands WHERE band_name = ?', [reviewData.band_name]);
+    const [bandRows] = await conn.execute('SELECT * FROM bands WHERE band_id = ?', [reviewData.band_id]);
     if (bandRows.length === 0) {
         throw new Error("Band not found");
     }
 
     const query = `
-        INSERT INTO reviews (band_name, sender, review, rating, status, date_time)
+        INSERT INTO reviews (band_id, sender, review, rating, status, date_time)
         VALUES (?, ?, ?, ?, ?, ?)
     `;
     
     const [result] = await conn.execute(query, [
-        reviewData.band_name,
+        reviewData.band_id,
         reviewData.sender,
         reviewData.review,
         reviewData.rating,
@@ -47,7 +47,7 @@ async function getReviews(bandName, ratingFrom, ratingTo) {
     const params = [];
 
     if (bandName !== 'all') {
-        query += " AND band_name = ?";
+        query += " AND band_id = ?";
         params.push(bandName);
     }
 

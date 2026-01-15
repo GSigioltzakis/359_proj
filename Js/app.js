@@ -421,7 +421,7 @@ app.get('/band/messages/:eventId', async (req, res) => {
 
 app.post('/band/message', async (req, res) => {
     try {
-        await sendMessage({ event_id: req.body.event_id, message: req.body.message });
+        await sendMessage({ event_id: req.body.event_id, message: req.body.message, sender: req.body.sender });
         res.json({ message: "Sent" });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
