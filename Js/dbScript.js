@@ -1,7 +1,7 @@
 // scriptaki gia na valei ola ta dedomena apo to resource.js sto database
 const mysql = require('mysql2/promise');
 // Import the data from your resources file
-const { users, bands, public_events, reviews, private_events, messages } = require('./resources.js');
+const {users, bands, public_events, reviews, private_events, messages } = require('./resources.js');
 
 async function seedDatabase() {
     // 1. Create Connection

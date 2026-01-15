@@ -444,7 +444,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     // --- ASKISIS2
-    
+    const wantsProfileView = window.location.hash === '#profile';
+
     const loginSection = document.getElementById('login_section');
     const profileSection = document.getElementById('profile_section');
     const loginForm = document.getElementById('loginForm');
@@ -458,16 +459,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function checkAuthStatus() {
         try {
-            const res = await fetch('http://localhost:3000/check-auth');
+            const res = await fetch('http://localhost:3000/check-auth', {
+            credentials: 'include'
+            });
             const data = await res.json();
+
             if (data.loggedIn) {
+            if (wantsProfileView) {
+                // ΜΗΝ κάνεις redirect — δείξε το 2ο μέρος (profile)
                 showProfile(data.userData);
             } else {
-                loginSection.style.display = 'block';
-                profileSection.style.display = 'none';
+                // κράτα το παλιό behaviour
+                window.location.href = "http://localhost:3000/index2.html";
             }
-        } catch (err) { console.error(err); }
+            } else {
+            loginSection.style.display = 'block';
+            profileSection.style.display = 'none';
+            }
+        } catch (err) {
+            console.error(err);
+        }
     }
+
 
     //Login Submit, alagi login form logo admin -> prosthiki xeroristo login
     if (loginForm) {
@@ -510,7 +523,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (res.ok) {
                     console.log(data.message);
                     alert(data.message); 
-                    checkAuthStatus(); //vlepoume kai to profile
+                    checkAuthStatus();
+                    //vlepoume kai to profile
+                    if (window.location.hash === '#profile') {
+                        // blepoume  profile
+                        checkAuthStatus();
+                    } else {
+                        // allios login kai redirect
+                        window.location.href = "http://localhost:3000/index2.html";
+                    }
                 } else {
                     messageP.textContent = data.error;
                 }

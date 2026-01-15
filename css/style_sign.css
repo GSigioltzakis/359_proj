@@ -115,7 +115,7 @@ input:focus, select:focus , textarea:focus {
 }
 
 
-.submit_button {
+.submit_button, .to_home_btn {
     background: #ffffffb2;
     color: rgb(0, 0, 0);
     padding: 15px 40px;

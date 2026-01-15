@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Band Profile</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+  <link rel="stylesheet" href="/css/index2.css" />
+  <link rel="stylesheet" href="/css/band_profile.css" />
+  <link rel="icon" type="image/x-icon" href="/music_note.png">
+
+  <style>
+    /* minimal modal styling (1st phase) */
+    .modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:9999;}
+    .modal{background:#fff; width:min(520px, 92vw); border-radius:12px; padding:16px; box-shadow:0 12px 30px rgba(0,0,0,.25);}
+    .modal h3{margin:0 0 10px 0;}
+    .mrow{display:flex; gap:10px;}
+    .mrow > label{flex:1;}
+    .mfield{display:flex; flex-direction:column; gap:6px; margin:10px 0;}
+    .mfield input, .mfield select, .mfield textarea{padding:10px; border:1px solid #ddd; border-radius:10px;}
+    .modal-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:12px;}
+    .hint{opacity:.85; font-size:.92em;}
+    .err{color:#b00020; margin-top:8px;}
+    .ok{color:#0a7a2f; margin-top:8px;}
+    .two-col{display:grid; grid-template-columns: 1.1fr .9fr; gap:16px;}
+    .card{background:#fff; border-radius:14px; padding:14px; box-shadow:0 6px 18px rgba(0,0,0,.08);}
+    #calendar{min-height:520px;}
+  </style>
+</head>
+
+<body>
+  <header class="top-nav">
+    <div class="nav-left">
+      <span class="brand">Explore</span>
+      <a class="account-btn" href="/index2.html" style="text-decoration:none; display:inline-flex; align-items:center;">
+        ← Πίσω
+      </a>
+
+      <div class="account">
+        <button id="accountBtn" class="account-btn" type="button">Account ▾</button>
+        <div id="accountMenu" class="account-menu">
+          <a href="/html/users/normal_login.html">Log in</a>
+          <a href="/html/users/normal_signup.html">Sign up</a>
+          <div class="menu-sep"></div>
+          <a href="/html/bands/band_user.html">Continue as Band</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main style="max-width:1200px; margin:18px auto; padding:0 14px;">
+    <div class="two-col">
+
+      <!-- LEFT: band info -->
+      <section class="card">
+        <div id="loading">Loading band...</div>
+        <div id="error" class="err" style="display:none;"></div>
+
+        <div id="content" style="display:none;">
+          <div style="display:flex; gap:14px; align-items:center;">
+            <img id="bandPhoto" src="/images/band_placeholder.png" alt="band" style="width:96px; height:96px; border-radius:14px; object-fit:cover;">
+            <div>
+              <h2 id="bandName" style="margin:0 0 6px 0;">Band</h2>
+              <div class="hint">
+                <span id="bandCity">-</span> • <span id="bandYear">-</span>
+              </div>
+              <div id="bandGenres" style="margin-top:10px;"></div>
+            </div>
+          </div>
+
+          <hr style="border:none; border-top:1px solid #eee; margin:14px 0;">
+
+          <h3 style="margin:0 0 8px 0;">Διαθεσιμότητα</h3>
+          <p class="hint" style="margin:0;">
+            Κάνε click σε διαθέσιμο slot στο ημερολόγιο δεξιά για να κάνεις αίτημα (status: <b>requested</b>).
+          </p>
+        </div>
+      </section>
+
+      <!-- RIGHT: calendar -->
+      <aside class="card">
+        <h3 style="margin:0 0 10px 0;">Available dates</h3>
+        <div id="calendar"></div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- BOOK MODAL -->
+  <div id="bookOverlay" class="modal-overlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <h3 style="margin:0;">Book request</h3>
+        <button id="bookClose" class="icon-btn" type="button">✕</button>
+      </div>
+
+      <div class="hint" id="bookWhen" style="margin-top:6px;"></div>
+
+      <div class="mfield">
+        <label>Event type</label>
+        <select id="eventType">
+          <option value="Wedding">Wedding (€1000)</option>
+          <option value="Baptism">Baptism (€700)</option>
+          <option value="Party">Party (€500)</option>
+        </select>
+      </div>
+
+      <div class="mrow">
+        <label class="mfield">
+          <span>City</span>
+          <input id="eventCity" placeholder="π.χ. Ηράκλειο">
+        </label>
+        <label class="mfield">
+          <span>Address</span>
+          <input id="eventAddress" placeholder="π.χ. Olympia Palace">
+        </label>
+      </div>
+
+      <div class="mfield">
+        <label>Description</label>
+        <textarea id="eventDesc" rows="3" placeholder="Γράψε λίγες λεπτομέρειες..."></textarea>
+      </div>
+
+      <div id="bookMsg" class="err" style="display:none;"></div>
+
+      <div class="modal-actions">
+        <button id="bookCancel" class="ghost-btn" type="button">Cancel</button>
+        <button id="bookSubmit" class="primary-btn" type="button">Submit Request</button>
+      </div>
+    </div>
+  </div>
+</body>
+
+<script>
+  const API = window.location.origin;
+
+  // ---- helpers ----
+  function qs(name){ return new URLSearchParams(location.search).get(name); }
+  function esc(s){ return (s ?? '').toString().replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+  // ---- ids ----
+  const bandId = Number(qs('id'));   // ΜΟΝΟ ΕΔΩ bandId
+
+  // ---- auth ----
+  let authState = { loggedIn:false, userData:null };
+
+  async function checkAuth(){
+    const res = await fetch(`${API}/check-auth`, { credentials:'include' });
+    authState = await res.json();
+    applyAuthUI();
+  }
+
+  function applyAuthUI(){
+    const menu = document.getElementById('accountMenu');
+    if (!menu) return;
+
+    if (authState.loggedIn){
+      const u = authState.userData || {};
+      menu.innerHTML = `
+        <div style="padding:10px 12px; opacity:.9;">
+          Signed in as <b>${esc(u.username || 'user')}</b>
+        </div>
+        <div class="menu-sep"></div>
+        <a href="/html/users/normal_user.html">My Profile</a>
+        <a href="/html/users/my_tickets.html">My Tickets</a>
+        <div class="menu-sep"></div>
+        <a href="#" id="logoutLink">Logout</a>
+      `;
+
+      setTimeout(() => {
+        document.getElementById('logoutLink')?.addEventListener('click', async (e)=>{
+          e.preventDefault();
+          await fetch(`${API}/logout`, { method:'POST', credentials:'include' });
+          authState = { loggedIn:false, userData:null };
+          applyAuthUI();
+        });
+      }, 0);
+
+    } else {
+      // αν δεν είναι logged in δείξε login/signup
+      menu.innerHTML = `
+        <a href="/html/users/normal_login.html">Log in</a>
+        <a href="/html/users/normal_signup.html">Sign up</a>
+        <div class="menu-sep"></div>
+        <a href="/html/bands/band_user.html">Continue as Band</a>
+      `;
+    }
+  }
+
+  function requireLogin(){
+    if (authState.loggedIn) return true;
+    alert('Πρέπει να κάνεις login για να κάνεις booking request.');
+    location.href = '/html/users/normal_login.html';
+    return false;
+  }
+
+  // account dropdown
+  const account = document.querySelector('.account');
+  document.getElementById('accountBtn')?.addEventListener('click', (e) => {
+    e.stopPropagation(); account.classList.toggle('open');
+  });
+  document.addEventListener('click', () => account?.classList.remove('open'));
+
+  // ---- page elements ----
+  const loading = document.getElementById('loading') || document.getElementById('profileLoading');
+  const error = document.getElementById('error') || document.getElementById('profileError');
+  const content = document.getElementById('content') || document.getElementById('profileContent');
+
+  let selectedDateISO = null;
+
+  // ---- load band ----
+  async function loadBand(){
+    if (!bandId){
+      if (loading) loading.style.display='none';
+      if (error){
+        error.style.display='';
+        error.textContent='Missing id. Example: band_profile.html?id=1';
+      }
+      throw new Error('Missing band id');
+    }
+
+    const res = await fetch(`${API}/api/bands/${bandId}`, { credentials:'include' });
+    if (!res.ok) throw new Error('Band not found');
+
+    const b = await res.json();
+
+    document.getElementById('bandName').textContent = b.band_name || 'Band';
+    document.getElementById('bandCity').textContent = b.band_city || '-';
+    document.getElementById('bandYear').textContent = b.foundedYear || '-';
+
+    const img = document.getElementById('bandPhoto');
+    if (img){
+      img.src = b.photo ? `/images/${b.photo}` : '/images/band_placeholder.png';
+      img.onerror = () => img.src = '/images/band_placeholder.png';
+    }
+
+    const genres = (b.music_genres || '').split(',').map(x=>x.trim()).filter(Boolean);
+    const genresEl = document.getElementById('bandGenres');
+    if (genresEl){
+      genresEl.innerHTML = genres.length
+        ? genres.map(g=>`<span class="chip">${esc(g)}</span>`).join(' ')
+        : `<span class="chip">-</span>`;
+    }
+
+    if (loading) loading.style.display='none';
+    if (content) content.style.display='';
+  }
+
+  async function loadAvailability(){
+    // Προσθήκη του /api/bands/ για να ταιριάζει με το backend
+    const res = await fetch(`${API}/api/bands/${bandId}/availability`, { credentials:'include' });
+    if (!res.ok) throw new Error('Error loading availability');
+    return await res.json(); 
+  }
+
+  // ---- modal ----
+  const overlay = document.getElementById('bookOverlay');
+  const bookMsg = document.getElementById('bookMsg');
+
+  function openBookModal(dateISO){
+    if (!requireLogin()) return;
+    selectedDateISO = dateISO;
+
+    if (bookMsg){
+      bookMsg.style.display='none';
+      bookMsg.textContent='';
+      bookMsg.className='';
+    }
+
+    const when = new Date(dateISO).toLocaleString('el-GR');
+    document.getElementById('bookWhen').textContent = `Selected: ${when}`;
+
+    document.getElementById('eventType').value = 'Wedding';
+    document.getElementById('eventCity').value = '';
+    document.getElementById('eventAddress').value = '';
+    document.getElementById('eventDesc').value = '';
+
+    overlay.style.display='flex';
+  }
+
+  function closeBookModal(){
+    overlay.style.display='none';
+    selectedDateISO = null;
+  }
+
+  document.getElementById('bookClose')?.addEventListener('click', closeBookModal);
+  document.getElementById('bookCancel')?.addEventListener('click', closeBookModal);
+  overlay?.addEventListener('click', (e)=>{ if(e.target === overlay) closeBookModal(); });
+
+  document.getElementById('bookSubmit')?.addEventListener('click', async ()=>{
+    if (!selectedDateISO) return;
+
+    const payload = {
+      band_id: bandId,
+      event_type: document.getElementById('eventType').value,
+      event_datetime: selectedDateISO,
+      event_city: document.getElementById('eventCity').value.trim(),
+      event_address: document.getElementById('eventAddress').value.trim(),
+      event_description: document.getElementById('eventDesc').value.trim()
+    };
+
+    if (!payload.event_city || !payload.event_address){
+      bookMsg.style.display='';
+      bookMsg.textContent='Συμπλήρωσε City και Address.';
+      return;
+    }
+
+    const res = await fetch(`/api/private_events/request`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      credentials:'include',
+      body: JSON.stringify(payload)
+    });
+
+    const raw = await res.text();
+    let data = {};
+    try { data = JSON.parse(raw); } catch(e){ /* ignore */ }
+    
+    if (!res.ok){
+      bookMsg.style.display='';
+      bookMsg.textContent = data.error || 'Request failed';
+      return;
+    }
+
+    bookMsg.className='ok';
+    bookMsg.style.display='';
+    bookMsg.textContent = `✅ Request submitted (id=${data.private_event_id}). Status: requested`;
+
+    setTimeout(()=> closeBookModal(), 900);
+  });
+
+  // ---- calendar init ----
+  async function init(){
+    try{
+      await checkAuth();
+      await loadBand();
+
+      const availability = await loadAvailability();
+
+      const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+        initialView: 'dayGridMonth',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
+        selectable: false,
+        editable: false,
+
+        events: availability.map(e => ({
+          id: e.id,
+          title: e.title || 'Available',
+          start: e.start
+        })),
+
+        eventClick: function(info){
+          // click on available slot => open booking modal
+          openBookModal(info.event.start.toISOString());
+        }
+      });
+
+      calendar.render();
+
+    } catch(e){
+      if (loading) loading.style.display='none';
+      if (error){
+        error.style.display='';
+        error.textContent = e.message || 'Error';
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+</html>

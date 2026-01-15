@@ -161,8 +161,253 @@ async function getBandEarnings(band_id) {
     const totalRevenue = rows[0].total || 0;
     return (totalRevenue * 0.85).toFixed(2); //15% commission lol
 }
+ 
+ //public event gia calendar + results
+async function getPublicEventsForExplore() {
+  const conn = await getConnection();
+
+  const [rows] = await conn.execute(`
+    SELECT
+      public_event_id AS id,
+      event_type AS title,
+      event_datetime AS start,
+      NULL AS end,
+      event_city AS city,
+      participants_price AS price,
+      event_description AS description,
+      event_address AS venue,
+      event_lat AS lat,
+      event_lon AS lng,
+      band_id
+    FROM public_events
+    ORDER BY event_datetime ASC
+    LIMIT 500;
+  `);
+
+  return rows.map(r => ({
+    ...r,
+    start: r.start ? new Date(r.start).toISOString() : null,
+    end: r.end ? new Date(r.end).toISOString() : null,
+    lat: r.lat != null ? Number(r.lat) : null,
+    lng: r.lng != null ? Number(r.lng) : null,
+    price: r.price != null ? Number(r.price) : 0
+  }));
+}
+
+// public events gia to map me pin marker
+async function getFuturePublicEventsForMap() {
+  const conn = await getConnection();
+
+  const [rows] = await conn.execute(`
+    SELECT
+      public_event_id AS id,
+      event_type AS title,
+      event_datetime AS start,
+      event_city AS city,
+      event_address AS venue,
+      event_lat AS lat,
+      event_lon AS lng
+    FROM public_events
+    WHERE event_datetime >= NOW()
+      AND event_lat IS NOT NULL AND event_lon IS NOT NULL
+      AND event_lat <> 0 AND event_lon <> 0
+    ORDER BY event_datetime ASC
+    LIMIT 500;
+  `);
+
+  return rows.map(r => ({
+    ...r,
+    start: r.start ? new Date(r.start).toISOString() : null,
+    lat: Number(r.lat),
+    lng: Number(r.lng)
+  }));
+}
+
+// band filtering function gia to explore me filtra 
+
+// --- NEW: get bands with filters (city, year range, genres) ---
+async function getBandsFiltered(filters = {}) {
+  try {
+    const conn = await getConnection();
+
+    const city = (filters.city ?? '').toString().trim().toLowerCase();
+    const yearFrom = filters.year_from ? Number(filters.year_from) : null;
+    const yearTo = filters.year_to ? Number(filters.year_to) : null;
+
+    // "rock,pop" -> ["rock","pop"]
+    const genres = (filters.genres ?? '')
+      .toString()
+      .split(',')
+      .map(g => g.trim().toLowerCase())
+      .filter(Boolean);
+
+    let sql = `
+      SELECT
+        band_id,
+        band_name,
+        band_city,
+        foundedYear,
+        music_genres,
+        photo
+      FROM bands
+      WHERE 1=1
+    `;
+
+    const params = [];
+
+    if (city) {
+      sql += ` AND LOWER(band_city) LIKE ? `;
+      params.push(`%${city}%`);
+    }
+
+    if (Number.isFinite(yearFrom)) {
+      sql += ` AND foundedYear >= ? `;
+      params.push(yearFrom);
+    }
+
+    if (Number.isFinite(yearTo)) {
+      sql += ` AND foundedYear <= ? `;
+      params.push(yearTo);
+    }
+
+    // music_genres είναι string "Rock, Blues"
+    if (genres.length) {
+      sql += ` AND ( ${genres.map(() => `LOWER(music_genres) LIKE ?`).join(' OR ')} ) `;
+      genres.forEach(g => params.push(`%${g}%`));
+    }
+
+    sql += ` ORDER BY band_name ASC`;
+
+    const [rows] = await conn.execute(sql, params);
+    return rows;
+  } catch (err) {
+    throw new Error('DB error: ' + err.message);
+  }
+}
+
+// --- NEW: get single band by id (for band profile page) ---
+async function getBandById(band_id) {
+  try {
+    const conn = await getConnection();
+
+    const [rows] = await conn.execute(`
+      SELECT
+        band_id,
+        username,
+        band_name,
+        band_city,
+        foundedYear,
+        music_genres,
+        photo
+      FROM bands
+      WHERE band_id = ?
+      LIMIT 1
+    `, [band_id]);
+
+    return rows[0] || null;
+  } catch (err) {
+    throw new Error('DB error: ' + err.message);
+  }
+}
+
+// --- NEW: get public events for a specific band (for band profile page) ---
+async function getBandPublicEventsByBandId(band_id) {
+  try {
+    const conn = await getConnection();
+
+    const [rows] = await conn.execute(`
+      SELECT
+        public_event_id AS id,
+        event_type AS title,
+        event_datetime AS start,
+        NULL AS end,
+        event_city AS city,
+        participants_price AS price,
+        event_description AS description,
+        event_address AS venue,
+        event_lat AS lat,
+        event_lon AS lng,
+        band_id
+      FROM public_events
+      WHERE band_id = ?
+      ORDER BY event_datetime ASC
+      LIMIT 200
+    `, [band_id]);
+
+    return rows.map(r => ({
+      ...r,
+      start: r.start ? new Date(r.start).toISOString() : null,
+      end: r.end ? new Date(r.end).toISOString() : null,
+      lat: r.lat != null ? Number(r.lat) : null,
+      lng: r.lng != null ? Number(r.lng) : null,
+      price: r.price != null ? Number(r.price) : 0
+    }));
+  } catch (err) {
+    throw new Error('DB error: ' + err.message);
+  }
+}
+
+//availability slots gia public view for users
+async function getBandAvailabilityByBandId(band_id) {
+  const conn = await getConnection();
+  const [rows] = await conn.execute(`
+    SELECT public_event_id AS id,
+      event_type AS title,
+      event_datetime AS start
+    FROM public_events
+     WHERE band_id = ?
+      AND participants_price = 0
+      AND event_description = 'Added via Calendar'
+    ORDER BY event_datetime ASC
+    LIMIT 500
+  `, [band_id]);
+  return rows.map(r => ({
+    ...r,
+    start: r.start ? new Date(r.start).toISOString() : null
+  }));
+}
+
+function calcPrivatePrice(type){
+  const t = (type || '').toLowerCase();
+  if (t.includes('bapt')) return 700;
+  if (t.includes('wedd')) return 1000;
+  if (t.includes('party')) return 500;
+  return 500;
+}
+
+// user creates private event request
+async function createPrivateEventRequest(data){
+  const conn = await getConnection();
+  const price = calcPrivatePrice(data.event_type);
+
+  const sql = `
+    INSERT INTO private_events
+      (user_id, band_id, event_type, event_description, event_datetime,
+       event_city, event_address, price, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'requested')
+  `;
+
+  const [result] = await conn.execute(sql, [
+    data.user_id,
+    data.band_id,
+    data.event_type,
+    data.event_description || '',
+    data.event_datetime,
+    data.event_city,
+    data.event_address,
+    price
+  ]);
+
+  return { private_event_id: result.insertId };
+}
+
 
 module.exports = { 
     getBandByCredentials, getAllBandEvents, getBandRequests, 
-    updateRequestStatus, getMessages, sendMessage, addCalendarEvent, getAllBands, updateBand, deleteBand, getBandEarnings
+    updateRequestStatus, getMessages, sendMessage, addCalendarEvent,
+    getAllBands, updateBand, deleteBand, getBandEarnings, 
+    
+    getPublicEventsForExplore, getFuturePublicEventsForMap,
+    getBandsFiltered, getBandById, getBandPublicEventsByBandId,
+    getBandAvailabilityByBandId, createPrivateEventRequest
 };

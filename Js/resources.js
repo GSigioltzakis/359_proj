@@ -613,4 +613,4 @@ const messages=[
 ]
 
 
-module.exports = {users, bands,public_events, reviews,private_events, messages};
+module.exports = {users, bands, public_events, reviews, private_events, messages};

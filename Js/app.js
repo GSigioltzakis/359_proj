@@ -16,10 +16,20 @@ const { createReview, getReviews, updateReviewStatus, deleteReview } = require('
 const { deleteUser, getPendingReviews, getAdminStats } = require('./databaseQueriesAdmin'); //import admin functions
 const { 
     getBandByCredentials, getAllBandEvents, getBandRequests, 
-    updateRequestStatus, getMessages, sendMessage, addCalendarEvent, getAllBands, updateBand, deleteBand, getBandEarnings
+    updateRequestStatus, getMessages, sendMessage, addCalendarEvent,
+    getAllBands, updateBand, deleteBand, getBandEarnings,
+    getPublicEventsForExplore, getFuturePublicEventsForMap, getBandsFiltered, getBandById, getBandPublicEventsByBandId,
+    getBandAvailabilityByBandId, createPrivateEventRequest
+
 } = require('./databaseQueriesBands');
+const { getUserPrivateEvents, markPrivateEventDone} = require('./databaseQueriesUsers');
+const { get } = require('http');
+
+
+
 const app = express();
 const PORT = 3000;
+
 
 app.use(cors());
 
@@ -48,6 +58,12 @@ app.post('/login', async (req, res) => {
             req.session.loggedIn = true;
             req.session.username = users[0].username;
             req.session.userData = users[0];
+
+            //tha doume an leitoyrgei svsta isos einai blakeia!!!! 
+            req.session.isAdmin = false;
+            req.session.isBand = false;
+            req.session.bandUsername = null;
+            req.session.bandData = null;
             
             res.status(200).json({ message: "Bravo correct login perfect", username: users[0].username });
         } else {
@@ -97,7 +113,7 @@ app.put('/update/user', async (req, res) => {
 
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, '../index2.html'));
 });
 
 //AJAX Check Route
@@ -336,6 +352,12 @@ app.post('/band/login', async (req, res) => {
             req.session.isBand = true; //flag that this is a band login
             req.session.bandUsername = bands[0].username;
             req.session.bandData = bands[0];
+
+            //isos blakeia kai auto
+            req.session.isAdmin = false;
+            req.session.username = null;
+            req.session.userData = null;
+
             res.status(200).json({ message: "Band login success" });
         } else {
             res.status(401).json({ error: "Invalid band credentials" });
@@ -412,6 +434,163 @@ app.get('/band/earnings', async (req, res) => {
 });
 
 
+// public events for calendar + results
+app.get('/band/public_events', async (req, res) => {
+  try {
+    const events = await getPublicEventsForExplore();
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// public events with pins for maps
+app.get('/public_events/map', async (req, res) => {
+  try {
+    const events = await getFuturePublicEventsForMap();
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// bands filtered for explore page
+app.get('/band/bands', async (req, res) => {
+  try {
+    const bands = await getBandsFiltered(req.query);
+    res.json(bands);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/band/band/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
+
+    const band = await getBandById(id); 
+    if (!band) return res.status(404).json({ error: "Not found" });
+
+    res.json(band);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// get private events for a user 
+app.get('/user/private_events', async (req, res) => {
+  if (!req.session.loggedIn) return res.status(403).json({ error: "Not logged in" });
+
+  try {
+    const events = await getUserPrivateEvents(req.session.userData.user_id);
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+//put private event  DONE 
+app.put('/user/private_events/:id/done', async (req, res) => {
+  if (!req.session.loggedIn) return res.status(403).json({ error: "Not logged in" });
+
+  try {
+    const ok = await markPrivateEventDone(req.session.userData.user_id, req.params.id);
+    if (!ok) return res.status(400).json({ error: "Cannot mark done (status/date)" });
+    res.json({ message: "Event marked done" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/user/private_events', async (req, res) => {
+  if (!req.session.loggedIn) return res.status(403).json({ error: "Not logged in" });
+
+  try {
+    const createdId = await createPrivateEventRequest({
+      user_id: req.session.userData.user_id,
+      band_id: req.body.band_id,
+      event_type: req.body.event_type,
+      people_count: req.body.people_count,
+      city: req.body.city,
+      address: req.body.address,
+      notes: req.body.notes
+    });
+    res.json({ message: "Request created", id: createdId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+function requireUser(req, res, next) {
+  if (req.session?.loggedIn && req.session?.userData?.user_id) return next();
+  return res.status(403).json({ error: "Not logged in as user" });
+}
+
+// single band info (public)
+app.get('/api/bands/:id', async (req, res) => {
+  try {
+    const band = await getBandById(Number(req.params.id));
+    if (!band) return res.status(404).json({ error: "Band not found" });
+    res.json(band);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/private_events/request', async (req, res) => {
+  // πρέπει να είναι logged in user (όχι band)
+  if (!req.session.loggedIn || req.session.isBand) {
+    return res.status(403).json({ error: 'Not logged in as user' });
+  }
+
+  try {
+    const user_id = req.session.userData.user_id;
+
+    const {
+      band_id, event_type, event_datetime,
+      event_city, event_address, event_description
+    } = req.body;
+
+    if (!band_id || !event_type || !event_datetime || !event_city || !event_address) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const out = await createPrivateEventRequest({
+      user_id,
+      band_id,
+      event_type,
+      event_datetime,
+      event_city,
+      event_address,
+      event_description
+    });
+
+    res.json({ private_event_id: out.private_event_id, status: 'requested' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// availability slots for a band (public)
+app.get('/api/bands/:id/availability', async (req, res) => {
+  try {
+    const events = await getBandPublicEventsByBandId(req.params.id);
+    const slots = events.map(e => ({ id: e.id, title: e.title || 'Available', start: e.start }));
+    res.json(slots);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+
+
+console.log("ROUTES:");
+app._router.stack
+  .filter(r => r.route)
+  .forEach(r => console.log(Object.keys(r.route.methods).join(",").toUpperCase(), r.route.path));
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

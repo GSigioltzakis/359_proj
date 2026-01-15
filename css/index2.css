@@ -80,11 +80,19 @@ body{
 
 /* Main area κάτω από nav με κενό */
 .page{
+  /*
   height: calc(100vh - var(--nav-h));
   box-sizing: border-box;
   padding: var(--gap);
   display: flex;
   gap: var(--gap);
+  */
+  display: grid;
+  grid-template-columns: 1fr 360px; /* αριστερά περιεχόμενο, δεξιά bands */
+  gap: 16px;
+  align-items: start;
+  padding: 16px;
+
   padding-bottom: 60px;  /* > footer height */
   box-sizing: border-box;
 }
@@ -94,17 +102,10 @@ body{
   gap: 14px;
 }
 
-/* Results να μεγαλώνει όσο χρειάζεται */
-.results-card{
+/* Results kai map να μεγαλώνει όσο χρειάζεται */
+.results-card, .map-card{
   background:#fff;
-  border-radius:14px;
-  padding:12px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.08);
-}
-/* Map κάτω από results */
-.map-card{
-  background:#fff;
-  border-radius:14px;
+  border-radius:12px;
   padding:12px;
   box-shadow:0 2px 10px rgba(0,0,0,0.08);
 }
@@ -114,6 +115,7 @@ body{
   width: 100%;
   height: 360px;
   border-radius: 12px;
+  margin-top: 0;
   overflow: hidden;
 }
 
@@ -151,7 +153,8 @@ body{
 
 /* Το ίδιο το calendar να ταιριάζει στο card */
 #calendar{
-  height: 320px; /* λίγο μικρότερο από max-height */
+  height: 380px;
+  width: 100% ;
 }
 
 /* Account dropdown */
@@ -596,3 +599,101 @@ body {
   height:40px; padding:0 10px; border-radius:10px; border:1px solid #ddd;
 }
 .bf-actions{ display:flex; gap:10px; }
+
+/* ίδια αισθητική με request-card */
+.event-card {
+  background: white;
+  padding: 15px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  border-left: 6px solid #3b82f6; /* μπλε για public */
+}
+
+.event-card h3 {
+  margin: 0 0 8px 0;
+}
+
+.event-card p {
+  margin: 6px 0;
+  color: #222;
+}
+
+.btn {
+  padding: 8px 14px;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+}
+
+.btn-ticket { background: #111; }
+.btn-ticket:hover { background: #333; }
+
+/* modal */
+.ticket-modal{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  width: min(520px, 92vw);
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.25);
+  z-index: 2000;
+  display: none;
+  overflow: hidden;
+}
+
+.ticket-modal.open{ display: block; }
+
+.ticket-head{
+  padding: 14px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+}
+
+.ticket-title{ font-weight: 800; font-size: 16px; }
+.ticket-meta{ font-size: 12px; color:#444; margin-top: 2px; }
+
+.ticket-body{ padding: 14px; }
+
+.t-field{ display:flex; flex-direction:column; gap:6px; }
+.t-field input{
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.18);
+  padding: 0 10px;
+}
+
+.ticket-summary{
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.04);
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+}
+
+.ticket-pay{ margin-top: 12px; display:flex; justify-content:flex-end; }
+
+.ticket-msg{ margin-top: 10px; font-size: 13px; color:#333; }
+
+#ticketOverlay.overlay{ z-index: 1999; }
+
+/* gia tickets diff color based on state */
+.badge.req { background: rgba(255, 193, 7, 0.2); color: #ffc107; border-color: #ffc107; }    /* Requested */
+.badge.tbd { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border-color: #3b82f6; }    /* To be done */
+.badge.rej { background: rgba(239, 68, 68, 0.2); color: #ef4444; border-color: #ef4444; }    /* Rejected*/
+.badge.done { background: rgba(34, 197, 94, 0.2); color: #22c55e; border-color: #22c55e; }   /* Done*/
+
+/* Highlight booked private */
+.ticket-card.confirmed {
+    border-left: 4px solid #3b82f6;
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(18, 24, 38, 1) 100%);
+}

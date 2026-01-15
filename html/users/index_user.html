@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Band Dashboard</title>
+    <title>User Dashboard</title>
     <!--calendar parmeno apo: https://fullcalendar.io/-->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-    <link rel="stylesheet" href="./css/index2.css" />
+    <link rel="stylesheet" href="../../css/index2.css" />
     <link rel="icon" type="image/x-icon" href="../music_note.png">
     
 </head>
@@ -17,19 +17,22 @@
             <button id="sortBtn" class="account-btn" type="button">Ταξινόμηση ▾</button>
             <button id="filtersBtn" class="account-btn" type="button">Φίλτρα ▾</button>
 
-            <!--Account dropdown -->
             <div class="account">
-            <button id="accountBtn" class="account-btn" type="button">Account ▾</button>
-            <div id="accountMenu" class="account-menu">
-                <a href="html/users/normal_login.html">Log in</a>
-                <a href="html/users/normal_signup.html">Sign up</a>
-                <div class="menu-sep"></div>
-                <a href="html/bands/band_user.html">Continue as Band</a>
-            </div>
-            </div>
-        </div>
-        
+                <a id="profileBtn" class="account-btn" href="/html/users/user_profile.html" style="text-decoration:none; display:none;">
+                    Profile
+                </a>
 
+                <button id="logoutBtn" class="account-btn" type="button" style="display:none;">
+                    Log out
+                </button>
+
+                <!-- fallback όταν ΔΕΝ είναι logged in -->
+                <a id="loginBtn" class="account-btn" href="/html/users/normal_login.html" style="text-decoration:none; display:none;">
+                    Log in
+                </a>
+            </div>
+
+        </div>
     </header>
 
     <main class="page">
@@ -56,16 +59,6 @@
 
   <!-- ΔΕΞΙΑ: BAND CARDS -->
   <aside class="right-col">
-    <div id="userServicesCard" class="band-filters-card" style="display:none;">
-            <h3 style="margin:0 0 10px 0;">My Services</h3>
-
-            <div style="display:flex; flex-direction:column; gap:8px;">
-                <button id="btnMyProfile" class="primary-btn" type="button">My Profile</button>
-                <button id="btnMyTickets" class="ghost-btn" type="button">My Tickets</button>
-                <button id="btnFavorites" class="ghost-btn" type="button">Favorites</button>
-                <button id="btnMyMessages" class="ghost-btn" type="button">Messages</button>
-            </div>
-        </div>
     <div class="band-filters-card">
     <h3 style="margin:0 0 10px 0;">Band Filters</h3>
 
@@ -264,7 +257,7 @@
         <div id="musicOverlay" class="overlay"></div>
 
         <!-- ticket card -->
-        
+         <!-- Tickets Modal -->
         <div id="ticketOverlay" class="overlay"></div>
 
         <div id="ticketModal" class="ticket-modal" role="dialog" aria-modal="true" aria-hidden="true">
@@ -356,7 +349,7 @@
             btn.addEventListener('click', () => {
                 activeSort = btn.dataset.sort;
                 sortMenu.classList.remove('open');
-                applyFilters(); // ξανακάνει render με ταξινόμηση
+                applyFilters(); // ✅ ξανακάνει render με ταξινόμηση
             });
         });
 
@@ -432,6 +425,7 @@
                 return;
             }
 
+            // Αν είναι λίγα, δείξτα. Αν είναι πολλά, δείξε count.
             if (selected.length <= 2) {
                 textEl.textContent = selected.join(', ');
             } else {
@@ -455,7 +449,7 @@
         const genresDone = document.getElementById('genresDone');
 
         
-        // Clear and Done buttons
+        // Clear / Done buttons
         genresClear.addEventListener('click', () => {
         document.querySelectorAll('#genreMenu input[type="checkbox"]').forEach(cb => cb.checked = false);
         updateGenreButtonText();
@@ -480,7 +474,7 @@
         
 
 
-        // συνάρτηση για μετατροπή ημερομηνίας σε timestamp 
+        // Βοηθητική συνάρτηση για μετατροπή ημερομηνίας σε timestamp 
         function dateOnlyTs(d) {
             const x = new Date(d);
             if (isNaN(x.getTime())) return null;
@@ -488,6 +482,9 @@
         }
 
         async function fetchPublicEvents() {
+            // EXPECTED endpoint: GET /user/public_events
+            // returns array of events with at least:
+            // { id, title, start, end?, city?, genre?, venue?, description?, price? }
             const res = await fetch(`${API_BASE}/public_events`);
             allPublicEvents = await res.json();
             applyFilters();
@@ -506,7 +503,7 @@
             const toTs = toVal ? dateOnlyTs(toVal) : null;
 
             const filtered = allPublicEvents.filter(ev => {
-                // genre
+                // genre (αν υπάρχει)
                 if (genre.length) {
                     const g = normalize(ev.genre);
                     if (!genre.includes(g)) return false;
@@ -585,7 +582,6 @@
             });
             calendar.render();
             fetchPublicEvents();
-            loadBands(); //φορτώνει τις μπάντες
         });
 
         document.getElementById('applyBtn').addEventListener('click', applyFilters);
@@ -907,11 +903,10 @@
         const qty = Math.max(1, Number(ticketQty.value || 1));
         const total = Number(ticketTotal.textContent);
 
- 
+        // TODO: πληρωμή 
         // προς το παρόν demo:
         ticketMsg.textContent = `✅ Demo: Θα χρεωθείς €${total.toFixed(2)} για ${qty} εισιτήρια. (Payment endpoint έρχεται)`;
         });
-        //1
         //click handler for tickets buttons in results list
         document.getElementById('resultsList').addEventListener('click', (e) => {
             const btn = e.target.closest('.tickets-btn');
@@ -923,84 +918,12 @@
             console.log("Tickets clicked:", ev);
             if (ev) openTickets(ev);
         });
-   
-let authState = { loggedIn: false, userData: null };
 
-async function checkAuth(){
-  // Αν είσαι same-origin (σερβίρεις το html από τον ίδιο Express), αυτό αρκεί:
-  const res = await fetch('/check-auth');
+        //gia tickets 
+        document.getElementById('btnMyTickets')?.addEventListener('click', () => 
+            location.href='html/users/my_tickets.html'
+        );
 
-  // Αν είσαι σε άλλο origin/port, δες την ενότητα "Server/CORS" πιο κάτω.
-  const data = await res.json();
-  authState = data;
-  applyAuthUI();
-}
-
-function applyAuthUI(){
-  const menu = document.getElementById('accountMenu');
-  const services = document.getElementById('userServicesCard');
-
-  if (authState.loggedIn){
-    const u = authState.userData || {};
-    menu.innerHTML = `
-      <div style="padding:10px 12px; opacity:.9;">
-        Signed in as <b>${u.username || 'user'}</b>
-      </div> 
-      <div class="menu-sep"></div>
-      <a href="html/users/normal_user.html">My Profile</a>
-      <a href="html/users/normal_my_tickets.html">My Tickets</a>
-      <a href="html/users/normal_favorites.html">Favorites</a>
-      <a href="html/users/normal_messages.html">Messages</a>
-      <div class="menu-sep"></div>
-      <a href="#" id="logoutLink">Logout</a>
-    `;
-
-    // show services card
-    if (services) services.style.display = '';
-
-    // hook logout
-    setTimeout(() => {
-      const logoutLink = document.getElementById('logoutLink');
-      if (logoutLink){
-        logoutLink.addEventListener('click', async (e) => {
-          e.preventDefault();
-          await fetch('/logout', { method:'POST' });
-          authState = { loggedIn:false, userData:null };
-          applyAuthUI();
-        });
-      }
-    }, 0);
-
-  } else {
-    menu.innerHTML = `
-      <a href="html/users/normal_login.html">Log in</a>
-      <a href="html/users/normal_signup.html">Sign up</a>
-      <div class="menu-sep"></div>
-      <a href="html/bands/band_user.html">Continue as Band</a>
-    `;
-
-    if (services) services.style.display = 'none';
-  }
-}
-
-// Προστασία actions: π.χ. αγορά εισιτηρίου μόνο για logged-in
-function requireLogin(){
-  if (authState.loggedIn) return true;
-  alert('Πρέπει να κάνεις login για αυτή την ενέργεια.');
-  window.location.href = 'html/users/normal_login.html';
-  return false;
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  checkAuth();
-
-  // προαιρετικά: buttons από User Services card
-  document.getElementById('btnMyProfile')?.addEventListener('click', () => location.href='html/users/normal_login.html#profile');
-  document.getElementById('btnMyTickets')?.addEventListener('click', () => location.href='html/users/my_tickets.html');
-  document.getElementById('btnFavorites')?.addEventListener('click', () => location.href='html/users/normal_favorites.html');
-  document.getElementById('btnMyMessages')?.addEventListener('click', () => location.href='html/users/normal_messages.html');
-});
-</script>
-
+    </script>
 </body>
 </html>

@@ -5,6 +5,7 @@ let connection;
 
 async function getConnection() {
   if (!connection) {
+    
     connection = await mysql.createConnection({
       host: "localhost",
       port: 3306,

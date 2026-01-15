@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Tickets</title>
+  <link rel="stylesheet" href="/css/index2.css" />
+  <link rel="icon" type="image/x-icon" href="/music_note.png">
+  <style>
+    .tickets-page{ padding: 20px; max-width: 1100px; margin: 0 auto; }
+    .ticket-card{ background:#121826; border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:14px; margin-bottom:12px; }
+    .ticket-head{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .ticket-title{ font-size:18px; font-weight:700; margin:0; }
+    .ticket-meta{ opacity:.85; margin-top:6px; }
+    .ticket-actions{ margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+    .muted{ opacity:.75; }
+  </style>
+</head>
+
+<body>
+  <header class="top-nav">
+    <div class="nav-left">
+      <span class="brand">Explore</span>
+      <a class="account-btn" href="/index2.html" style="text-decoration:none;display:inline-flex;align-items:center;">← Πίσω</a>
+
+      <div class="account">
+        <button id="accountBtn" class="account-btn" type="button">Account ▾</button>
+        <div id="accountMenu" class="account-menu"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="tickets-page">
+    <h2 class="panel-title">My Tickets (Private Events)</h2>
+    <div id="msg" class="muted"></div>
+    <div id="list">Loading...</div>
+  </main>
+
+  <script>
+    const listEl = document.getElementById('list');
+    const msgEl = document.getElementById('msg');
+
+    function statusBadge(status){
+      const s = (status || '').toLowerCase();
+      if (s === 'requested') return `<span class="badge req">requested</span>`;
+      if (s === 'to be done') return `<span class="badge tbd">to be done</span>`;
+      if (s === 'rejected') return `<span class="badge rej">rejected</span>`;
+      if (s === 'done') return `<span class="badge done">done</span>`;
+      return `<span class="badge">${status || '-'}</span>`;
+    }
+
+    function canMarkDone(ev){
+      if ((ev.status || '').toLowerCase() !== 'to be done') return false;
+      const dt = new Date(ev.event_datetime);
+      return !isNaN(dt.getTime()) && dt.getTime() < Date.now();
+    }
+
+    function render(events){
+      if (!events.length){
+        listEl.innerHTML = `<div class="ticket-card">Δεν έχεις private events ακόμη.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = events.map(ev => {
+        const s = (ev.status || '').toLowerCase();
+        const isConfirmed = s === 'to be done';
+        const cardClass = isConfirmed ? 'ticket-card confirmed' : 'ticket-card';
+        
+        const when = ev.event_datetime ? new Date(ev.event_datetime).toLocaleString('el-GR') : '-';
+        const band = ev.band_name || `Band #${ev.band_id}`;
+        const price = Number(ev.price ?? 0).toFixed(2);
+        const decision = ev.band_decision ? `<div class="muted"><b>Band decision:</b> ${ev.band_decision}</div>` : '';
+        const doneBtn = canMarkDone(ev)
+          ? `<button class="primary-btn" data-done="${ev.private_event_id}" type="button">Mark Done</button>`
+          : '';
+
+        return `
+          <div class= "${cardClass}">
+            <div class="ticket-head">
+              <div>
+                <h3 class="ticket-title">${ev.event_type || 'Private Event'} • ${band}</h3>
+                <div class="ticket-meta">
+                  <div><b>When: </b> ${when}</div>
+                  <div><b>City:</b> ${ev.event_city || '-'} • <b>Address:</b> ${ev.event_address || '-'}</div>
+                  <div><b>Price:</b> €${price} • <b>Status:</b> ${statusBadge(ev.status)}</div>
+                </div>
+              </div>
+            </div>
+
+            <div style = "margin-top:10px;">
+              <div class = "muted"><b>Description:</b> ${ev.event_description || '-'}</div>
+              ${decision}
+            </div>
+
+            <div class = "ticket-actions">
+              ${doneBtn}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function load(){
+      try{
+        // 1) check auth
+        const a = await fetch('/check-auth', { credentials:'include' });
+        const auth = await a.json();
+        if (!auth.loggedIn){
+          window.location.href = '/users/normal_login.html';
+          return;
+        }
+
+        // 2) load events
+        const r = await fetch('/user/private_events', { credentials:'include' });
+        if (!r.ok){
+          const text = await r.text();
+          throw new Error(`HTTP ${r.status}: ${text}`);
+        }
+        const data = await r.json();
+        render(Array.isArray(data) ? data : []);
+        msgEl.textContent = '';
+      } catch(e){
+        listEl.innerHTML = '';
+        msgEl.textContent = 'Error loading tickets: ' + e.message;
+      }
+    }
+
+    document.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-done]');
+      if (!btn) return;
+
+      const id = btn.getAttribute('data-done');
+      try{
+        const r = await fetch(`/user/private_events/${id}/done`, {
+          method: 'PUT',
+          credentials: 'include'
+        });
+        if (!r.ok){
+          const t = await r.text();
+          throw new Error(`HTTP ${r.status}: ${t}`);
+        }
+        await load();
+      } catch(err){
+        alert('Δεν μπόρεσε να γίνει done: ' + err.message);
+      }
+    });
+
+    // account dropdown simple
+    const account = document.querySelector('.account');
+    const accountBtn = document.getElementById('accountBtn');
+    const accountMenu = document.getElementById('accountMenu');
+    accountBtn.addEventListener('click', (e) => { e.stopPropagation(); account.classList.toggle('open'); });
+    document.addEventListener('click', () => account.classList.remove('open'));
+    accountMenu.innerHTML = `
+      <a href="/users/normal_user.html">My Profile</a>
+      <a href="/users/my_tickets.html">My Tickets</a>
+      <div class="menu-sep"></div>
+      <a href="#" id="logoutLink">Logout</a>
+    `;
+    document.getElementById('logoutLink').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await fetch('/logout', { method:'POST', credentials:'include' });
+      window.location.href = '/users/normal_login.html';
+    });
+
+    load();
+  </script>
+</body>
+</html>

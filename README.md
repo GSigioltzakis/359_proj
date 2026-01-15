@@ -58,3 +58,10 @@
         4. Apothikeuei nea minimata kai anakta to istoriko synomilias gia sygekrimena events. Telos, ipologizei ta kathara kerdi tis mpantas athroizontas thn aksia twn olokliromenwn ('done') events kai afairontas promitheia 15%.
 
 # (5) event Γ, bands-> user_profile (tba)
+
+
+# genika Elis progress
+Η αρχική σελίδα  index2.html είναι αυτή που βλέπει ο επισκέπτης χρήστης. Από εκεί μπορεί να κάνει Log in/ sign in είτε ως user είτε ως μπάντα από το account κουμπί.
+Για user log in ανοίγει το αρχείο normal_login.html και έπειτα ανοίγει το index_user.html το οποίο είναι το index + δυνατότητες για εγγεγραμμένο χρήστη. 
+
+# (3) event b, user->
