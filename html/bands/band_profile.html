@@ -165,11 +165,14 @@
 <script>
   const API = window.location.origin;
 
+  //pliris ilopiisi sostou id sto url etsi oste na vlepoume ta dedomena gia to analogo (sindedemeno) band.
+  const urlParams = new URLSearchParams(window.location.search);
+  const bandId = Number(urlParams.get('id'));
+  console.log("Current Band ID:", bandId);
+
   // ---- helpers ----
   function qs(name){ return new URLSearchParams(location.search).get(name); }
   function esc(s){ return (s ?? '').toString().replaceAll('<','&lt;').replaceAll('>','&gt;'); }
-
-
 
   // ---- auth ----
   let authState = { loggedIn:false, userData:null };
@@ -206,8 +209,7 @@
         });
       }, 0);
 
-    } else {
-      // αν δεν είναι logged in δείξε login/signup
+    } else {//oxi logged in 
       menu.innerHTML = `
         <a href="/html/users/normal_login.html">Log in</a>
         <a href="/html/users/normal_signup.html">Sign up</a>
@@ -219,9 +221,13 @@
 
   function requireLogin(){
     if (authState.loggedIn) return true;
-    alert('Πρέπει να κάνεις login για να κάνεις booking request.');
-    location.href = '/html/users/normal_login.html';
+    // Εμφάνιση του Login Modal αντί για alert/redirect
+    document.getElementById('loginModal').style.display = 'block'; 
     return false;
+  }
+
+  function closeModal() {
+    document.getElementById('loginModal').style.display = 'none';
   }
 
   // account dropdown
@@ -240,13 +246,13 @@
 
   // ---- load band ----
   async function loadBand(){
-    if (!bandId){
+    if (!bandId || isNaN(bandId)){
       if (loading) loading.style.display='none';
       if (error){
         error.style.display='';
         error.textContent='Missing id. Example: band_profile.html?id=1';
       }
-      throw new Error('Missing band id');
+      return; 
     }
 
     const res = await fetch(`${API}/api/bands/${bandId}`, { credentials:'include' });
@@ -260,8 +266,13 @@
 
     const img = document.getElementById('bandPhoto');
     if (img){
-      img.src = b.photo ? `/images/${b.photo}` : '/images/band_placeholder.png';
-      img.onerror = () => img.src = '/images/band_placeholder.png';
+      const MAX_CUSTOM_IMAGES = 20; // 20 eikones apo /images
+      let imageUrl = '/images/default.jpg';
+      if (b.band_id <= MAX_CUSTOM_IMAGES) {
+          imageUrl = `/images/band_${b.band_id}.jpg`;
+      }
+      img.src = imageUrl;
+      img.onerror = () => img.src = '/images/default.jpg';
     }
 
     const genres = (b.music_genres || '').split(',').map(x=>x.trim()).filter(Boolean);
@@ -277,7 +288,6 @@
   }
 
   async function loadAvailability(){
-    // Προσθήκη του /api/bands/ για να ταιριάζει με το backend
     const res = await fetch(`${API}/api/bands/${bandId}/availability`, { credentials:'include' });
     if (!res.ok) throw new Error('Error loading availability');
     return await res.json(); 
@@ -359,11 +369,92 @@
     setTimeout(()=> closeBookModal(), 900);
   });
 
+  //reviews full implementation APO: USER->ADMIN, ADMIN->BAND, BAND->profile for evetyone to see
+
+  // fortosi reviews
+  async function loadReviews() {
+    const list = document.getElementById('reviewsList');
+    if (!bandId) {
+      list.innerHTML = '<p>Error: Band ID missing from URL.</p>';
+      return;
+    }
+
+    try {
+      //json ilopiisi 
+      const res = await fetch(`${API}/api/reviews-by-id/${bandId}`, { credentials: 'include' });
+      if (!res.ok) throw new Error("Could not fetch reviews");
+      const reviews = await res.json(); 
+
+      if (!reviews || reviews.length === 0) {
+        list.innerHTML = '<p>No reviews yet. Be the first to write one!</p>';
+        return;
+      }
+      //emfanisi review
+      list.innerHTML = reviews.map(r => `
+        <div style="border-bottom:1px solid #ddd; padding:10px 0; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between;">
+              <strong>${r.sender || 'Anonymous'}</strong>
+              <span style="color:#f39c12;">${'★'.repeat(r.rating || 5)}</span>  <!--ASTERIA APO 1-5 -->
+            </div>
+            <p style="margin: 5px 0;">${r.review}</p>
+            <small style="color:gray;">${new Date(r.date_time).toLocaleDateString('el-GR')}</small>
+          </div>
+      `).join('');
+    } catch (err) {
+      console.error("Load Reviews Error:", err);
+      list.innerHTML = '<p>Error loading reviews.</p>';
+    }
+  }
+
+  // submit review
+  async function checkAndSubmitReview() {
+      if (!authState.loggedIn) {
+        // fortosi reviews otan fortwsei i selida -> emfanisi modal
+        document.getElementById('loginModal').style.display = 'block';
+        return;
+      }
+      
+      const reviewText = document.getElementById('reviewText').value.trim();
+      const rating = parseInt(document.getElementById('ratingSelect').value, 10);
+
+      if (reviewText.length === 0) {
+        alert('Please write a review before submitting.');
+        return;
+      }
+      if (!bandId) {
+          alert('Error: Band ID is missing from the URL.');
+          return;
+      }
+
+      //payload kai kane POST
+      const payload = {
+        band_id: bandId,
+        review: reviewText,
+        rating: rating
+      };
+
+      const res = await fetch(`${API}/api/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || 'Failed to submit review.');
+        return;
+      }
+
+      alert('Review submitted! Waiting for Admin approval.');
+      document.getElementById('reviewText').value = '';
+  }
+
   // ---- calendar init ----
   async function init(){
     try{
       await checkAuth();
       await loadBand();
+      loadReviews();
 
       const availability = await loadAvailability();
 
@@ -397,99 +488,5 @@
   }
 
   document.addEventListener('DOMContentLoaded', init);
-
-  // ---- reviews ----
-  
-  // 1. Σωστή λήψη του ονόματος από το URL
-const urlParams = new URLSearchParams(window.location.search);
-const bandId = Number(urlParams.get('id'));
-
-console.log("Current Band ID from URL:", bandId);
-
-async function loadReviews() {
-  const list = document.getElementById('reviewsList');
-  if (!bandId) {
-    list.innerHTML = '<p>Error: Band ID missing from URL.</p>';
-    return;
-  }
-
-  try {
-  // 2. Fetch και μετατροπή σε JSON
-    const res = await fetch(`${API}/api/reviews-by-id/${bandId}`, { credentials: 'include' });
-    if (!res.ok) throw new Error("Could not fetch reviews");
-    const reviews = await res.json(); 
-
-    // 3. Έλεγχος αν υπάρχουν κριτικές
-    if (!reviews || reviews.length === 0) {
-      list.innerHTML = '<p>No reviews yet. Be the first to write one!</p>';
-    return;
-    }
-
-    // 4. Εμφάνιση των κριτικών
-  list.innerHTML = reviews.map(r => `
-    <div style="border-bottom:1px solid #ddd; padding:10px 0; margin-bottom:10px;">
-        <div style="display:flex; justify-content:space-between;">
-          <strong>${r.sender || 'Anonymous'}</strong>
-          <span style="color:#f39c12;">${'★'.repeat(r.rating || 5)}</span>
-        </div>
-        <p style="margin: 5px 0;">${r.review}</p>
-        <small style="color:gray;">${new Date(r.date_time).toLocaleDateString('el-GR')}</small>
-      </div>
-    `).join('');
-  } catch (err) {
-    console.error("Load Reviews Error:", err);
-    list.innerHTML = '<p>Error loading reviews.</p>';
-  }
-}
-
-// fortosi reviews
-async function checkAndSubmitReview() {
-    if (!authState.loggedIn) {
-      document.getElementById('loginModal').style.display = 'block';
-      return;
-    }
-    // submit review
-    const reviewText = document.getElementById('reviewText').value.trim();
-    const rating = parseInt(document.getElementById('ratingSelect').value, 10);
-
-    if (reviewText.length === 0) {
-      alert('Please write a review before submitting.');
-      return;
-    }
-    if (!bandId) {
-        alert('Error: Band ID is missing from the URL.');
-        return;
-    }
-    // ftiaxe to payload kai kane to POST
-    const payload = {
-      band_id: bandId,
-      review: reviewText,
-      rating: rating
-    };
-
-    const res = await fetch(`${API}/api/reviews`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payload)
-    });
-    // checkare to apotelesma
-    if (!res.ok) {
-      const data = await res.json();
-      alert(data.error || 'Failed to submit review.');
-      return;
-    }
-
-    document.getElementById('reviewText').value = '';
-    loadReviews();
-  }
-  // fortosi reviews otan fortwsei i selida
-  function closeModal() {
-    document.getElementById('loginModal').style.display = 'none';
-  }
-
-
-loadReviews();
-
 </script>
 </html>
