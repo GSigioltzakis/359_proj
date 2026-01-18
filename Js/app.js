@@ -74,12 +74,14 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// have to check if logged in
+//elenxei an ekane login me to sosto id
 app.get('/check-auth', (req, res) => {
     if (req.session.loggedIn) {
+        const data = req.session.isBand ? req.session.bandData : req.session.userData;
         res.json({ 
             loggedIn: true, 
-            userData: req.session.userData 
+            isBand: req.session.isBand || false,
+            userData: data
         });
     } else {
         res.json({ loggedIn: false });
