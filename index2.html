@@ -362,6 +362,8 @@
 
 
         // render bands gia cards 
+        /*neo function gia tin ilopiisi ton eikonwn bands, 20 standard eikones kai mia default eikona gia 
+        kathe kainouria band creation apo to form*/
         function renderBands(bands){
             const grid = document.getElementById('bandsGrid');
 
@@ -371,8 +373,13 @@
             }
 
             grid.innerHTML = bands.map(b => {
-                // photo
-                const imgSrc = b.photo ? `images/${b.photo}` : 'images/band_placeholder.png';
+                //an to id tou band einai esto 5 tote-> (band_5.jpg)
+                //alios vale to default.jpg
+                const MAX_CUSTOM_IMAGES = 20; 
+                let imgSrc = 'images/default.jpg';
+                if (b.band_id <= MAX_CUSTOM_IMAGES) {
+                    imgSrc = `images/band_${b.band_id}.jpg`; //band_X opou Xe[1..20]
+                }
 
                 return `
                 <div class="band-card" onclick="location.href='http://localhost:3000/html/bands/band_profile.html?id=${b.band_id}'">
@@ -803,7 +810,7 @@
             alert(`${ev.title}\n${when}\n${ev.city || ''} • ${ev.genre || ''}`);
             });
         });
-//1
+        //1
             
         loadFutureEvents();
 
@@ -909,7 +916,7 @@
 
  
         // προς το παρόν demo:
-        ticketMsg.textContent = `✅ Demo: Θα χρεωθείς €${total.toFixed(2)} για ${qty} εισιτήρια. (Payment endpoint έρχεται)`;
+        ticketMsg.textContent = `Demo: Θα χρεωθείς €${total.toFixed(2)} για ${qty} εισιτήρια. (Payment endpoint έρχεται)`;
         });
         //1
         //click handler for tickets buttons in results list
@@ -924,82 +931,81 @@
             if (ev) openTickets(ev);
         });
    
-let authState = { loggedIn: false, userData: null };
+        let authState = { loggedIn: false, userData: null };
 
-async function checkAuth(){
-  // Αν είσαι same-origin (σερβίρεις το html από τον ίδιο Express), αυτό αρκεί:
-  const res = await fetch('/check-auth');
+        async function checkAuth(){
+        // Αν είσαι same-origin (σερβίρεις το html από τον ίδιο Express), αυτό αρκεί:
+        const res = await fetch('/check-auth');
 
-  // Αν είσαι σε άλλο origin/port, δες την ενότητα "Server/CORS" πιο κάτω.
-  const data = await res.json();
-  authState = data;
-  applyAuthUI();
-}
+        // Αν είσαι σε άλλο origin/port, δες την ενότητα "Server/CORS" πιο κάτω.
+        const data = await res.json();
+        authState = data;
+        applyAuthUI();
+        }
 
-function applyAuthUI(){
-  const menu = document.getElementById('accountMenu');
-  const services = document.getElementById('userServicesCard');
+        function applyAuthUI(){
+        const menu = document.getElementById('accountMenu');
+        const services = document.getElementById('userServicesCard');
 
-  if (authState.loggedIn){
-    const u = authState.userData || {};
-    menu.innerHTML = `
-      <div style="padding:10px 12px; opacity:.9;">
-        Signed in as <b>${u.username || 'user'}</b>
-      </div> 
-      <div class="menu-sep"></div>
-      <a href="html/users/normal_user.html">My Profile</a>
-      <a href="html/users/normal_my_tickets.html">My Tickets</a>
-      <a href="html/users/normal_favorites.html">Favorites</a>
-      <a href="html/users/normal_messages.html">Messages</a>
-      <div class="menu-sep"></div>
-      <a href="#" id="logoutLink">Logout</a>
-    `;
+        if (authState.loggedIn){
+            const u = authState.userData || {};
+            menu.innerHTML = `
+            <div style="padding:10px 12px; opacity:.9;">
+                Signed in as <b>${u.username || 'user'}</b>
+            </div> 
+            <div class="menu-sep"></div>
+            <a href="html/users/normal_user.html">My Profile</a>
+            <a href="html/users/normal_my_tickets.html">My Tickets</a>
+            <a href="html/users/normal_favorites.html">Favorites</a>
+            <a href="html/users/normal_messages.html">Messages</a>
+            <div class="menu-sep"></div>
+            <a href="#" id="logoutLink">Logout</a>
+            `;
 
-    // show services card
-    if (services) services.style.display = '';
+            // show services card
+            if (services) services.style.display = '';
 
-    // hook logout
-    setTimeout(() => {
-      const logoutLink = document.getElementById('logoutLink');
-      if (logoutLink){
-        logoutLink.addEventListener('click', async (e) => {
-          e.preventDefault();
-          await fetch('/logout', { method:'POST' });
-          authState = { loggedIn:false, userData:null };
-          applyAuthUI();
+            // hook logout
+            setTimeout(() => {
+            const logoutLink = document.getElementById('logoutLink');
+            if (logoutLink){
+                logoutLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await fetch('/logout', { method:'POST' });
+                authState = { loggedIn:false, userData:null };
+                applyAuthUI();
+                });
+            }
+            }, 0);
+        } else {
+            menu.innerHTML = `
+            <a href="html/users/normal_login.html">Log in</a>
+            <a href="html/users/normal_signup.html">Sign up</a>
+            <div class="menu-sep"></div>
+            <a href="html/bands/band_user.html">Continue as Band</a>
+            `;
+
+            if (services) services.style.display = 'none';
+        }
+        }
+
+        // Προστασία actions: π.χ. αγορά εισιτηρίου μόνο για logged-in
+        function requireLogin(){
+        if (authState.loggedIn) return true;
+        alert('Πρέπει να κάνεις login για αυτή την ενέργεια.');
+        window.location.href = 'html/users/normal_login.html';
+        return false;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+
+            // προαιρετικά: buttons από User Services card
+            document.getElementById('btnMyProfile')?.addEventListener('click', () => location.href='html/users/normal_login.html#profile');
+            document.getElementById('btnMyTickets')?.addEventListener('click', () => location.href='html/users/my_tickets.html');
+            document.getElementById('btnFavorites')?.addEventListener('click', () => location.href='html/users/normal_favorites.html');
+            document.getElementById('btnMyMessages')?.addEventListener('click', () => location.href='html/users/normal_messages.html');
         });
-      }
-    }, 0);
-
-  } else {
-    menu.innerHTML = `
-      <a href="html/users/normal_login.html">Log in</a>
-      <a href="html/users/normal_signup.html">Sign up</a>
-      <div class="menu-sep"></div>
-      <a href="html/bands/band_user.html">Continue as Band</a>
-    `;
-
-    if (services) services.style.display = 'none';
-  }
-}
-
-// Προστασία actions: π.χ. αγορά εισιτηρίου μόνο για logged-in
-function requireLogin(){
-  if (authState.loggedIn) return true;
-  alert('Πρέπει να κάνεις login για αυτή την ενέργεια.');
-  window.location.href = 'html/users/normal_login.html';
-  return false;
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  checkAuth();
-
-  // προαιρετικά: buttons από User Services card
-  document.getElementById('btnMyProfile')?.addEventListener('click', () => location.href='html/users/normal_login.html#profile');
-  document.getElementById('btnMyTickets')?.addEventListener('click', () => location.href='html/users/my_tickets.html');
-  document.getElementById('btnFavorites')?.addEventListener('click', () => location.href='html/users/normal_favorites.html');
-  document.getElementById('btnMyMessages')?.addEventListener('click', () => location.href='html/users/normal_messages.html');
-});
 </script>
 
 </body>
