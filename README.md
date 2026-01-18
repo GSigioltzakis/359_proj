@@ -57,11 +57,15 @@
         3. Fernei ola ta ekkremeis kai energa aitimata (krateiseis) syndyasmena me ta stoixeia tou xristi (me xrisi JOIN) kai enimeronei thn katastasi tous (px. accepted/rejected).
         4. Apothikeuei nea minimata kai anakta to istoriko synomilias gia sygekrimena events. Telos, ipologizei ta kathara kerdi tis mpantas athroizontas thn aksia twn olokliromenwn ('done') events kai afairontas promitheia 15%.
 
-# (5) event Γ, bands-> user_profile (tba)
+# (5) event Γ, bands-> user_profile.
+Gia to user_profile oson afora ta bands, ilopiithike me to na borei i banda na vlepei ta reviews pou tis ekanan afou afta reviews exoun ginei approve apo ton admin, kai epita ta vlepei kai i analogi banda. Episis gia extra, o pinakas anakoinoseon einai kai sto profile tis bandas.
 
-
+# (6) Guest user: 
 # genika Elis progress
-Η αρχική σελίδα  index2.html είναι αυτή που βλέπει ο επισκέπτης χρήστης. Από εκεί μπορεί να κάνει Log in/ sign in είτε ως user είτε ως μπάντα από το account κουμπί.
+1. Η αρχική σελίδα  index2.html είναι αυτή που βλέπει ο επισκέπτης χρήστης. Από εκεί μπορεί να κάνει Log in/ sign in είτε ως user είτε ως μπάντα από το account κουμπί. Πιο αναλυτικα, στο normal user form, το κουμπακι κατω-κατω που λεει "back to home" σε στελνει ως guest user και ετσι μπορεις να δεις ολες τις μπαντες (και αυτες που εχουν δημιουργηθει απο το φορμ), και τα αναλογα events που εχουν αναρτιθει. Μετα αμα θες να δεις κατι ως συνδεδεμενος user/band, απλα πατας πανω αριστερα "Account" και εκτελεις την αναλογη λειτουργεια που θες.
+
+2. Οσον αφορα μια μεγαλη αλλαγη, στο guestt view, εγινε προσθηκη (random apo web) εικονων. Δημιουργια φακελου images και μεσα εχει τα 20 bands apo to resource.js, και ενα default band image για τις bands Που δημιουργουνται απο το form.
+
 Για user log in ανοίγει το αρχείο normal_login.html και έπειτα ανοίγει το index_user.html το οποίο είναι το index + δυνατότητες για εγγεγραμμένο χρήστη. 
 
 # (3) event b, user->
