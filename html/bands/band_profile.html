@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="el">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Band Profile</title>
 
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
@@ -13,28 +14,100 @@
 
   <style>
     /* minimal modal styling (1st phase) */
-    .modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:9999;}
-    .modal{background:#fff; width:min(520px, 92vw); border-radius:12px; padding:16px; box-shadow:0 12px 30px rgba(0,0,0,.25);}
-    .modal h3{margin:0 0 10px 0;}
-    .mrow{display:flex; gap:10px;}
-    .mrow > label{flex:1;}
-    .mfield{display:flex; flex-direction:column; gap:6px; margin:10px 0;}
-    .mfield input, .mfield select, .mfield textarea{padding:10px; border:1px solid #ddd; border-radius:10px;}
-    .modal-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:12px;}
-    .hint{opacity:.85; font-size:.92em;}
-    .err{color:#b00020; margin-top:8px;}
-    .ok{color:#0a7a2f; margin-top:8px;}
-    .two-col{display:grid; grid-template-columns: 1.1fr .9fr; gap:16px;}
-    .card{background:#fff; border-radius:14px; padding:14px; box-shadow:0 6px 18px rgba(0,0,0,.08);}
-    #calendar{min-height:520px;}
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .modal {
+      background: #fff;
+      width: min(520px, 92vw);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
+    }
+
+    .modal h3 {
+      margin: 0 0 10px 0;
+    }
+
+    .mrow {
+      display: flex;
+      gap: 10px;
+    }
+
+    .mrow>label {
+      flex: 1;
+    }
+
+    .mfield {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 10px 0;
+    }
+
+    .mfield input,
+    .mfield select,
+    .mfield textarea {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+
+    .hint {
+      opacity: .85;
+      font-size: .92em;
+    }
+
+    .err {
+      color: #b00020;
+      margin-top: 8px;
+    }
+
+    .ok {
+      color: #0a7a2f;
+      margin-top: 8px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .08);
+    }
+
+    #calendar {
+      min-height: 520px;
+    }
   </style>
 </head>
 
 <body>
   <header class="top-nav">
     <div class="nav-left">
-      <span class="brand">Explore</span>
-      <a class="account-btn" href="/index2.html" style="text-decoration:none; display:inline-flex; align-items:center;">
+      <a href="../../index.html" class="brand" style="text-decoration:none;">Explore</a>
+
+      <a class="account-btn" href="band_dashboard.html"
+        style="text-decoration:none; display:inline-flex; align-items:center;">
         ← Πίσω
       </a>
 
@@ -60,7 +133,8 @@
 
         <div id="content" style="display:none;">
           <div style="display:flex; gap:14px; align-items:center;">
-            <img id="bandPhoto" src="/images/band_placeholder.png" alt="band" style="width:96px; height:96px; border-radius:14px; object-fit:cover;">
+            <img id="bandPhoto" src="../../images/default.jpg" alt="band"
+              style="width:96px; height:96px; border-radius:14px; object-fit:cover;">
             <div>
               <h2 id="bandName" style="margin:0 0 6px 0;">Band</h2>
               <div class="hint">
@@ -79,34 +153,39 @@
         </div>
       </section>
       <section class="reviews-container">
-    <h2>Reviews</h2>
-    <div id="reviewsList">Loading reviews...</div>
+        <h2>Reviews</h2>
+        <div id="reviewsList">Loading reviews...</div>
 
-    <div class="add-review-box" style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
-        <h3>Leave a Review</h3>
-        <select id="ratingSelect" style="display: block; margin-bottom: 10px;">
+        <div class="add-review-box" style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
+          <h3>Leave a Review</h3>
+          <select id="ratingSelect" style="display: block; margin-bottom: 10px;">
             <option value="5">5 Stars</option>
             <option value="4">4 Stars</option>
             <option value="3">3 Stars</option>
             <option value="2">2 Stars</option>
             <option value="1">1 Star</option>
-        </select>
-        <textarea id="reviewText" placeholder="Write your review here..." style="width:100%; height:80px;"></textarea>
-        <button onclick="checkAndSubmitReview()" class="primary-btn">Submit</button>
-    </div>
-    </section>
-
-    <div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000;">
-        <div style="background:white; width:350px; margin:15% auto; padding:25px; border-radius:12px; text-align:center; position:relative;">
-            <span onclick="closeModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:20px; font-weight:bold;">&times;</span>
-            <h3 style="color:#333;">Login Required</h3>
-            <p style="color:#666;">You must be logged in to leave a review!</p>
-            <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
-                <a href="/users/normal_login.html" class="primary-btn" style="text-decoration:none;">Login</a>
-                <a href="/users/normal_register.html" class="secondary-btn" style="text-decoration:none; color:#333; border:1px solid #ccc; padding:8px; border-radius:5px;">Sign Up</a>
-            </div>
+          </select>
+          <textarea id="reviewText" placeholder="Write your review here..." style="width:100%; height:80px;"></textarea>
+          <button onclick="checkAndSubmitReview()" class="primary-btn">Submit</button>
         </div>
-    </div>
+      </section>
+
+      <div id="loginModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000;">
+        <div
+          style="background:white; width:350px; margin:15% auto; padding:25px; border-radius:12px; text-align:center; position:relative;">
+          <span onclick="closeModal()"
+            style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:20px; font-weight:bold;">&times;</span>
+          <h3 style="color:#333;">Login Required</h3>
+          <p style="color:#666;">You must be logged in to leave a review!</p>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+            <a href="/users/normal_login.html" class="primary-btn" style="text-decoration:none;">Login</a>
+            <a href="/users/normal_register.html" class="secondary-btn"
+              style="text-decoration:none; color:#333; border:1px solid #ccc; padding:8px; border-radius:5px;">Sign
+              Up</a>
+          </div>
+        </div>
+      </div>
 
       <!-- RIGHT: calendar -->
       <aside class="card">
@@ -171,40 +250,38 @@
   console.log("Current Band ID:", bandId);
 
   // ---- helpers ----
-  function qs(name){ return new URLSearchParams(location.search).get(name); }
-  function esc(s){ return (s ?? '').toString().replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+  function qs(name) { return new URLSearchParams(location.search).get(name); }
+  function esc(s) { return (s ?? '').toString().replaceAll('<', '&lt;').replaceAll('>', '&gt;'); }
 
   // ---- auth ----
-  let authState = { loggedIn:false, userData:null };
+  let authState = { loggedIn: false, userData: null };
 
-  async function checkAuth(){
-    const res = await fetch(`${API}/check-auth`, { credentials:'include' });
+  async function checkAuth() {
+    const res = await fetch(`${API}/check-auth`, { credentials: 'include' });
     authState = await res.json();
     applyAuthUI();
   }
 
-  function applyAuthUI(){
+  function applyAuthUI() {
     const menu = document.getElementById('accountMenu');
     if (!menu) return;
 
-    if (authState.loggedIn){
+    if (authState.loggedIn) {
       const u = authState.userData || {};
       menu.innerHTML = `
         <div style="padding:10px 12px; opacity:.9;">
           Signed in as <b>${esc(u.username || 'user')}</b>
         </div>
         <div class="menu-sep"></div>
-        <a href="/html/users/normal_user.html">My Profile</a>
-        <a href="/html/users/my_tickets.html">My Tickets</a>
         <div class="menu-sep"></div>
         <a href="#" id="logoutLink">Logout</a>
       `;
 
       setTimeout(() => {
-        document.getElementById('logoutLink')?.addEventListener('click', async (e)=>{
+        document.getElementById('logoutLink')?.addEventListener('click', async (e) => {
           e.preventDefault();
-          await fetch(`${API}/logout`, { method:'POST', credentials:'include' });
-          authState = { loggedIn:false, userData:null };
+          await fetch(`${API}/logout`, { method: 'POST', credentials: 'include' });
+          authState = { loggedIn: false, userData: null };
           applyAuthUI();
         });
       }, 0);
@@ -219,10 +296,10 @@
     }
   }
 
-  function requireLogin(){
+  function requireLogin() {
     if (authState.loggedIn) return true;
     // Εμφάνιση του Login Modal αντί για alert/redirect
-    document.getElementById('loginModal').style.display = 'block'; 
+    document.getElementById('loginModal').style.display = 'block';
     return false;
   }
 
@@ -245,17 +322,17 @@
   let selectedDateISO = null;
 
   // ---- load band ----
-  async function loadBand(){
-    if (!bandId || isNaN(bandId)){
-      if (loading) loading.style.display='none';
-      if (error){
-        error.style.display='';
-        error.textContent='Missing id. Example: band_profile.html?id=1';
+  async function loadBand() {
+    if (!bandId || isNaN(bandId)) {
+      if (loading) loading.style.display = 'none';
+      if (error) {
+        error.style.display = '';
+        error.textContent = 'Missing id. Example: band_profile.html?id=1';
       }
-      return; 
+      return;
     }
 
-    const res = await fetch(`${API}/api/bands/${bandId}`, { credentials:'include' });
+    const res = await fetch(`${API}/api/bands/${bandId}`, { credentials: 'include' });
     if (!res.ok) throw new Error('Band not found');
 
     const b = await res.json();
@@ -265,46 +342,46 @@
     document.getElementById('bandYear').textContent = b.foundedYear || '-';
 
     const img = document.getElementById('bandPhoto');
-    if (img){
+    if (img) {
       const MAX_CUSTOM_IMAGES = 20; // 20 eikones apo /images
       let imageUrl = '/images/default.jpg';
       if (b.band_id <= MAX_CUSTOM_IMAGES) {
-          imageUrl = `/images/band_${b.band_id}.jpg`;
+        imageUrl = `/images/band_${b.band_id}.jpg`;
       }
       img.src = imageUrl;
       img.onerror = () => img.src = '/images/default.jpg';
     }
 
-    const genres = (b.music_genres || '').split(',').map(x=>x.trim()).filter(Boolean);
+    const genres = (b.music_genres || '').split(',').map(x => x.trim()).filter(Boolean);
     const genresEl = document.getElementById('bandGenres');
-    if (genresEl){
+    if (genresEl) {
       genresEl.innerHTML = genres.length
-        ? genres.map(g=>`<span class="chip">${esc(g)}</span>`).join(' ')
+        ? genres.map(g => `<span class="chip">${esc(g)}</span>`).join(' ')
         : `<span class="chip">-</span>`;
     }
 
-    if (loading) loading.style.display='none';
-    if (content) content.style.display='';
+    if (loading) loading.style.display = 'none';
+    if (content) content.style.display = '';
   }
 
-  async function loadAvailability(){
-    const res = await fetch(`${API}/api/bands/${bandId}/availability`, { credentials:'include' });
+  async function loadAvailability() {
+    const res = await fetch(`${API}/api/bands/${bandId}/availability`, { credentials: 'include' });
     if (!res.ok) throw new Error('Error loading availability');
-    return await res.json(); 
+    return await res.json();
   }
 
   // ---- modal ----
   const overlay = document.getElementById('bookOverlay');
   const bookMsg = document.getElementById('bookMsg');
 
-  function openBookModal(dateISO){
+  function openBookModal(dateISO) {
     if (!requireLogin()) return;
     selectedDateISO = dateISO;
 
-    if (bookMsg){
-      bookMsg.style.display='none';
-      bookMsg.textContent='';
-      bookMsg.className='';
+    if (bookMsg) {
+      bookMsg.style.display = 'none';
+      bookMsg.textContent = '';
+      bookMsg.className = '';
     }
 
     const when = new Date(dateISO).toLocaleString('el-GR');
@@ -315,19 +392,19 @@
     document.getElementById('eventAddress').value = '';
     document.getElementById('eventDesc').value = '';
 
-    overlay.style.display='flex';
+    overlay.style.display = 'flex';
   }
 
-  function closeBookModal(){
-    overlay.style.display='none';
+  function closeBookModal() {
+    overlay.style.display = 'none';
     selectedDateISO = null;
   }
 
   document.getElementById('bookClose')?.addEventListener('click', closeBookModal);
   document.getElementById('bookCancel')?.addEventListener('click', closeBookModal);
-  overlay?.addEventListener('click', (e)=>{ if(e.target === overlay) closeBookModal(); });
+  overlay?.addEventListener('click', (e) => { if (e.target === overlay) closeBookModal(); });
 
-  document.getElementById('bookSubmit')?.addEventListener('click', async ()=>{
+  document.getElementById('bookSubmit')?.addEventListener('click', async () => {
     if (!selectedDateISO) return;
 
     const payload = {
@@ -339,34 +416,34 @@
       event_description: document.getElementById('eventDesc').value.trim()
     };
 
-    if (!payload.event_city || !payload.event_address){
-      bookMsg.style.display='';
-      bookMsg.textContent='Συμπλήρωσε City και Address.';
+    if (!payload.event_city || !payload.event_address) {
+      bookMsg.style.display = '';
+      bookMsg.textContent = 'Συμπλήρωσε City και Address.';
       return;
     }
 
     const res = await fetch(`/api/private_events/request`, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      credentials:'include',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(payload)
     });
 
     const raw = await res.text();
     let data = {};
-    try { data = JSON.parse(raw); } catch(e){ /* ignore */ }
-    
-    if (!res.ok){
-      bookMsg.style.display='';
+    try { data = JSON.parse(raw); } catch (e) { /* ignore */ }
+
+    if (!res.ok) {
+      bookMsg.style.display = '';
       bookMsg.textContent = data.error || 'Request failed';
       return;
     }
 
-    bookMsg.className='ok';
-    bookMsg.style.display='';
+    bookMsg.className = 'ok';
+    bookMsg.style.display = '';
     bookMsg.textContent = `✅ Request submitted (id=${data.private_event_id}). Status: requested`;
 
-    setTimeout(()=> closeBookModal(), 900);
+    setTimeout(() => closeBookModal(), 900);
   });
 
   //reviews full implementation APO: USER->ADMIN, ADMIN->BAND, BAND->profile for evetyone to see
@@ -383,7 +460,7 @@
       //json ilopiisi 
       const res = await fetch(`${API}/api/reviews-by-id/${bandId}`, { credentials: 'include' });
       if (!res.ok) throw new Error("Could not fetch reviews");
-      const reviews = await res.json(); 
+      const reviews = await res.json();
 
       if (!reviews || reviews.length === 0) {
         list.innerHTML = '<p>No reviews yet. Be the first to write one!</p>';
@@ -408,85 +485,102 @@
 
   // submit review
   async function checkAndSubmitReview() {
-      if (!authState.loggedIn) {
-        // fortosi reviews otan fortwsei i selida -> emfanisi modal
-        document.getElementById('loginModal').style.display = 'block';
-        return;
-      }
-      
-      const reviewText = document.getElementById('reviewText').value.trim();
-      const rating = parseInt(document.getElementById('ratingSelect').value, 10);
+    if (!authState.loggedIn) {
+      // fortosi reviews otan fortwsei i selida -> emfanisi modal
+      document.getElementById('loginModal').style.display = 'block';
+      return;
+    }
 
-      if (reviewText.length === 0) {
-        alert('Please write a review before submitting.');
-        return;
-      }
-      if (!bandId) {
-          alert('Error: Band ID is missing from the URL.');
-          return;
-      }
+    const reviewText = document.getElementById('reviewText').value.trim();
+    const rating = parseInt(document.getElementById('ratingSelect').value, 10);
 
-      //payload kai kane POST
-      const payload = {
-        band_id: bandId,
-        review: reviewText,
-        rating: rating
-      };
+    if (reviewText.length === 0) {
+      alert('Please write a review before submitting.');
+      return;
+    }
+    if (!bandId) {
+      alert('Error: Band ID is missing from the URL.');
+      return;
+    }
 
-      const res = await fetch(`${API}/api/reviews`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        alert(data.error || 'Failed to submit review.');
-        return;
-      }
+    //payload kai kane POST
+    const payload = {
+      band_id: bandId,
+      review: reviewText,
+      rating: rating
+    };
 
-      alert('Review submitted! Waiting for Admin approval.');
-      document.getElementById('reviewText').value = '';
+    const res = await fetch(`${API}/api/reviews`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      alert(data.error || 'Failed to submit review.');
+      return;
+    }
+
+    alert('Review submitted! Waiting for Admin approval.');
+    document.getElementById('reviewText').value = '';
   }
 
   // ---- calendar init ----
-  async function init(){
-    try{
-      await checkAuth();
-      await loadBand();
-      loadReviews();
+  async function init() {
+    try {
+      await checkAuth(); // 1. Ελέγχουμε αν είναι logged in
+      await loadBand();  // 2. Φορτώνουμε τα στοιχεία της μπάντας (το βλέπουν όλοι)
+      loadReviews();     // 3. Φορτώνουμε τα reviews (το βλέπουν όλοι)
 
-      const availability = await loadAvailability();
+      const calendarContainer = document.getElementById('calendar');
 
-      const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-        initialView: 'dayGridMonth',
-        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
-        selectable: false,
-        editable: false,
+      // 4. ΕΛΕΓΧΟΣ: Είναι συνδεδεμένος;
+      if (authState.loggedIn) {
+        // ΝΑΙ: Φόρτωσε τη διαθεσιμότητα και δείξε το ημερολόγιο
+        const availability = await loadAvailability();
 
-        events: availability.map(e => ({
-          id: e.id,
-          title: e.title || 'Available',
-          start: e.start
-        })),
+        const calendar = new FullCalendar.Calendar(calendarContainer, {
+          initialView: 'dayGridMonth',
+          headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth' },
+          selectable: false,
+          editable: false,
+          height: 400, // Λίγο πιο κοντό για ομορφιά
 
-        eventClick: function(info){
-          // click on available slot => open booking modal
-          openBookModal(info.event.start.toISOString());
-        }
-      });
+          events: availability.map(e => ({
+            id: e.id,
+            title: 'Available',
+            start: e.start,
+            display: 'background',
+            backgroundColor: '#28a745'
+          })),
 
-      calendar.render();
+          eventClick: function (info) {
+            openBookModal(info.event.start.toISOString());
+          }
+        });
 
-    } catch(e){
-      if (loading) loading.style.display='none';
-      if (error){
-        error.style.display='';
-        error.textContent = e.message || 'Error';
+        calendar.render();
+      } else {
+        //kripse imerologio
+        calendarContainer.innerHTML = `
+            <div style="text-align:center; padding: 40px 20px; color: #555; background: #fdfdfd; border: 1px dashed #ccc; border-radius: 8px;">
+                <p style="font-size: 1.2em;"><strong>Availability Locked</strong></p>
+                <p>To see available dates and book this band, please <a href="/html/users/normal_login.html" style="color:#1368c9; font-weight:bold;">Log in</a>.</p>
+            </div>
+          `;
+      }
+
+    } catch (e) {
+      if (loading) loading.style.display = 'none';
+      if (error) {
+        error.style.display = '';
+        error.textContent = e.message || 'Error loading profile';
       }
     }
   }
 
   document.addEventListener('DOMContentLoaded', init);
 </script>
+
 </html>
