@@ -645,10 +645,10 @@ app.get('/api/reviews-by-id/:id', async (req, res) => {
 });
 
 
-console.log("ROUTES:");
-app._router.stack
-  .filter(r => r.route)
-  .forEach(r => console.log(Object.keys(r.route.methods).join(",").toUpperCase(), r.route.path));
+// console.log("ROUTES:");
+// app._router.stack
+//   .filter(r => r.route)
+//   .forEach(r => console.log(Object.keys(r.route.methods).join(",").toUpperCase(), r.route.path));
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
