@@ -1,4 +1,4 @@
-body { 
+body {
     margin: 0;
     font-family: 'Segoe UI', sans-serif;
     display: flex;
@@ -18,9 +18,32 @@ body {
     text-decoration: none;
     border-radius: 5px;
     font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
-#profileBtn:hover { background-color: #d32f2f; } /*on hover allagi xromatos*/
+
+#profileBtn:hover {
+    background-color: #d32f2f;
+}
+
+#logoutBtn {
+    position: absolute;
+    top: 20px;
+    right: 160px;
+    /* Left of profile button */
+    z-index: 1000;
+    background-color: #555;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+#logoutBtn:hover {
+    background-color: #777;
+}
 
 /*CALENDAR aristera*/
 .left-panel {
@@ -31,7 +54,10 @@ body {
     background: #fff;
     position: relative;
 }
-#calendar { max-height: 90vh; }
+
+#calendar {
+    max-height: 90vh;
+}
 
 /* dexia ta reeusts  */
 .right-panel {
@@ -48,22 +74,40 @@ body {
     padding: 15px;
     margin-bottom: 15px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-left: 5px solid orange;
 }
-.status-requested { border-left-color: orange; }
-.status-tobedone { border-left-color: #007bff; }
 
-.btn { 
+.status-requested {
+    border-left-color: orange;
+}
+
+.status-tobedone {
+    border-left-color: #007bff;
+}
+
+.btn {
     padding: 8px 15px;
     border: none;
     cursor: pointer;
-    border-radius: 4px; color: white;
+    border-radius: 4px;
+    color: white;
     margin-right: 5px;
 }
-.btn-accept { background: #28a745; }
-.btn-reject { background: #dc3545; }
-.btn-chat { background: #007bff; width: 100%; margin-top: 10px;}
+
+.btn-accept {
+    background: #28a745;
+}
+
+.btn-reject {
+    background: #dc3545;
+}
+
+.btn-chat {
+    background: #007bff;
+    width: 100%;
+    margin-top: 10px;
+}
 
 .chat-container {
     display: none;
@@ -71,15 +115,31 @@ body {
     border-top: 1px solid #eee;
     padding-top: 10px;
 }
-.messages-box { 
-    height: 150px; 
-    overflow-y: auto; 
-    background: #f1f1f1; 
-    padding: 10px; 
-    margin-bottom: 10px; 
-    border-radius: 5px; 
-}
-.msg { padding: 5px 10px; margin: 5px; border-radius: 10px; width: fit-content; max-width: 80%; }
-.msg.band { background: #d1ecf1; margin-left: auto; text-align: right; }
-.msg.user { background: #fff; border: 1px solid #ccc; }
 
+.messages-box {
+    height: 150px;
+    overflow-y: auto;
+    background: #f1f1f1;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+.msg {
+    padding: 5px 10px;
+    margin: 5px;
+    border-radius: 10px;
+    width: fit-content;
+    max-width: 80%;
+}
+
+.msg.band {
+    background: #d1ecf1;
+    margin-left: auto;
+    text-align: right;
+}
+
+.msg.user {
+    background: #fff;
+    border: 1px solid #ccc;
+}
