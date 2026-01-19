@@ -1,27 +1,65 @@
 <!DOCTYPE html>
 <html lang="el">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Tickets</title>
   <link rel="stylesheet" href="/css/index2.css" />
   <link rel="icon" type="image/x-icon" href="/music_note.png">
   <style>
-    .tickets-page{ padding: 20px; max-width: 1100px; margin: 0 auto; }
-    .ticket-card{  font-size: 16px;background:#a5b8e5; border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:14px; margin-bottom:12px; }
-    .ticket-head{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
-    .ticket-title{ font-size:20px; font-weight:700; margin:0; }
-    .ticket-meta{ opacity:.85; margin-top:6px; }
-    .ticket-actions{ margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
-    .muted{ opacity:.75; }
+    .tickets-page {
+      padding: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .ticket-card {
+      font-size: 16px;
+      background: #a5b8e5;
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .ticket-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .ticket-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .ticket-meta {
+      opacity: .85;
+      margin-top: 6px;
+    }
+
+    .ticket-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .muted {
+      opacity: .75;
+    }
   </style>
 </head>
 
 <body>
   <header class="top-nav">
     <div class="nav-left">
-      <span class="brand">Explore</span>
-      <a class="account-btn" href="/index2.html" style="text-decoration:none;display:inline-flex;align-items:center;">← Πίσω</a>
+      <a href="../../index.html" class="brand" style="text-decoration:none;">Explore</a>
+      <a class="account-btn" href="index_user.html"
+        style="text-decoration:none;display:inline-flex;align-items:center;">← Πίσω</a>
 
       <div class="account">
         <button id="accountBtn" class="account-btn" type="button">Account ▾</button>
@@ -40,7 +78,7 @@
     const listEl = document.getElementById('list');
     const msgEl = document.getElementById('msg');
 
-    function statusBadge(status){
+    function statusBadge(status) {
       const s = (status || '').toLowerCase();
       if (s === 'requested') return `<span class="badge req">requested</span>`;
       if (s === 'to be done') return `<span class="badge tbd">to be done</span>`;
@@ -49,14 +87,14 @@
       return `<span class="badge">${status || '-'}</span>`;
     }
 
-    function canMarkDone(ev){
+    function canMarkDone(ev) {
       if ((ev.status || '').toLowerCase() !== 'to be done') return false;
       const dt = new Date(ev.event_datetime);
       return !isNaN(dt.getTime()) && dt.getTime() < Date.now();
     }
 
-    function render(events){
-      if (!events.length){
+    function render(events) {
+      if (!events.length) {
         listEl.innerHTML = `<div class="ticket-card">Δεν έχεις private events ακόμη.</div>`;
         return;
       }
@@ -65,7 +103,7 @@
         const s = (ev.status || '').toLowerCase();
         const isConfirmed = s === 'to be done';
         const cardClass = isConfirmed ? 'ticket-card confirmed' : 'ticket-card';
-        
+
         const when = ev.event_datetime ? new Date(ev.event_datetime).toLocaleString('el-GR') : '-';
         const band = ev.band_name || `Band #${ev.band_id}`;
         const price = Number(ev.price ?? 0).toFixed(2);
@@ -74,8 +112,8 @@
           ? `<button class="primary-btn" data-done="${ev.private_event_id}" type="button">Mark Done</button>`
           : '';
         // ΚΟΥΜΠΙ CHAT (Εμφανίζεται μόνο αν είναι to be done)
-        const chatBtn = isConfirmed 
-          ? `<button class="account-btn" onclick="toggleChat(${ev.private_event_id})" type="button" style="background:#2563eb; color:white; margin-left:8px;">Open Chat</button>` 
+        const chatBtn = isConfirmed
+          ? `<button class="account-btn" onclick="toggleChat(${ev.private_event_id})" type="button" style="background:#2563eb; color:white; margin-left:8px;">Open Chat</button>`
           : '';
         return `
           <div class= "${cardClass}">
@@ -115,26 +153,26 @@
       }).join('');
     }
 
-    async function load(){
-      try{
+    async function load() {
+      try {
         // 1) check auth
-        const a = await fetch('/check-auth', { credentials:'include' });
+        const a = await fetch('/check-auth', { credentials: 'include' });
         const auth = await a.json();
-        if (!auth.loggedIn){
+        if (!auth.loggedIn) {
           window.location.href = '/users/normal_login.html';
           return;
         }
 
         // 2) load events
-        const r = await fetch('/user/private_events', { credentials:'include' });
-        if (!r.ok){
+        const r = await fetch('/user/private_events', { credentials: 'include' });
+        if (!r.ok) {
           const text = await r.text();
           throw new Error(`HTTP ${r.status}: ${text}`);
         }
         const data = await r.json();
         render(Array.isArray(data) ? data : []);
         msgEl.textContent = '';
-      } catch(e){
+      } catch (e) {
         listEl.innerHTML = '';
         msgEl.textContent = 'Error loading tickets: ' + e.message;
       }
@@ -145,17 +183,17 @@
       if (!btn) return;
 
       const id = btn.getAttribute('data-done');
-      try{
+      try {
         const r = await fetch(`/user/private_events/${id}/done`, {
           method: 'PUT',
           credentials: 'include'
         });
-        if (!r.ok){
+        if (!r.ok) {
           const t = await r.text();
           throw new Error(`HTTP ${r.status}: ${t}`);
         }
         await load();
-      } catch(err){
+      } catch (err) {
         alert('Δεν μπόρεσε να γίνει done: ' + err.message);
       }
     });
@@ -174,55 +212,55 @@
     `;
     document.getElementById('logoutLink').addEventListener('click', async (e) => {
       e.preventDefault();
-      await fetch('/logout', { method:'POST', credentials:'include' });
+      await fetch('/logout', { method: 'POST', credentials: 'include' });
       window.location.href = '/users/normal_login.html';
     });
 
     load();
 
-  
+
     /*fortosi minimaton apo to backend*/
     async function loadMessages(eventId) {
       const res = await fetch(`/band/messages/${eventId}`);
 
-      if(res.status === 404){
+      if (res.status === 404) {
         alert('Δεν βρέθηκαν μηνύματα για αυτό το event.');
         return;
       }
       const msgs = await res.json();
       const box = document.getElementById(`msgs_${eventId}`);
       box.innerHTML = '';
-            
+
       msgs.forEach(m => { //gia kathe minima to vazei sto chat box
         const type = (m.sender === 'user') ? 'user' : 'band';
         box.innerHTML += `<div class="msg ${type}"><b>${m.sender}:</b> ${m.message}</div>`;
       });
       box.scrollTop = box.scrollHeight;
     }
-      
+
     async function sendUserMessage(eventId) {
       const input = document.getElementById(`input_${eventId}`);
       const txt = input.value.trim();
-      if(!txt) return; //apla ama den yparxei minima, min to steilei(epistrefei)
-      try{
+      if (!txt) return; //apla ama den yparxei minima, min to steilei(epistrefei)
+      try {
 
         const response = await fetch(`/band/message`, {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             event_id: eventId,
             message: txt,
-           sender: 'user'
+            sender: 'user'
           })
         });
         if (response.ok) {
-            input.value = ''; // Καθαρίζει το πεδίο κειμένου
-            await loadMessages(eventId); // Φορτώνει τα μηνύματα ξανά για να φανεί το νέο
+          input.value = ''; // Καθαρίζει το πεδίο κειμένου
+          await loadMessages(eventId); // Φορτώνει τα μηνύματα ξανά για να φανεί το νέο
         } else {
-            console.error("Σφάλμα απόκρισης server");
+          console.error("Σφάλμα απόκρισης server");
         }
       }
-      catch(err){
+      catch (err) {
         alert('Δεν μπόρεσε να σταλεί το μήνυμα: ' + err.message);
       }
     }
@@ -230,14 +268,15 @@
     function toggleChat(id) {
       const el = document.getElementById(`chat_area_${id}`);
       el.style.display = (el.style.display === 'block') ? 'none' : 'block';
-      if(el.style.display === 'block') {
+      if (el.style.display === 'block') {
         loadMessages(id);
         //esto kai na fortonei kathe 5 deuterolepta ta minima
-        if(!window.chatInterval) window.chatInterval = {};
-        if(window.chatInterval[id]) clearInterval(window.chatInterval[id]);
+        if (!window.chatInterval) window.chatInterval = {};
+        if (window.chatInterval[id]) clearInterval(window.chatInterval[id]);
         window.chatInterval[id] = setInterval(() => loadMessages(id), 5000);
       }
     }
-    </script>
-    </body>
-    </html>
+  </script>
+</body>
+
+</html>
