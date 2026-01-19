@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Band Dashboard</title>
@@ -8,11 +9,13 @@
     <link rel="stylesheet" href="../../css/band_dash.css" />
     <link rel="icon" type="image/x-icon" href="../music_note.png">
 
-    
+
 </head>
+
 <body>
 
     <a href="band_profile.html" id="profileBtn">Show Profile</a>
+    <button id="logoutBtn">Log out</button>
 
     <div class="left-panel">
         <h2 style="margin-top:0;">Availability & Events</h2>
@@ -25,16 +28,20 @@
     </div>
     <!--gia ta earnings-->
     <div class="sidebar">
-        <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background: #ffffff; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center; border: 1px solid #444;">
-            <span style="font-size: 0.9em; color: #000000; font-family: 'Segoe UI', sans-serif;">Total Earnings ;)</span><br>
-            <span style="font-size: 1.5em; color: #0df644; font-weight: bold; font-family: 'Segoe UI', sans-serif;">€<span id="earningsVal">0.00</span></span>
+        <div
+            style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background: #ffffff; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center; border: 1px solid #444;">
+            <span style="font-size: 0.9em; color: #000000; font-family: 'Segoe UI', sans-serif;">Total Earnings
+                ;)</span><br>
+            <span
+                style="font-size: 1.5em; color: #0df644; font-weight: bold; font-family: 'Segoe UI', sans-serif;">€<span
+                    id="earningsVal">0.00</span></span>
         </div>
     </div>
     <!-- JavaScript-->
-<script>
+    <script>
         const API_BASE = 'http://localhost:3000/band';
         /*arxikopiisi tou calendar*/
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
@@ -44,13 +51,13 @@
                     right: 'dayGridMonth,timeGridWeek'
                 },
                 selectable: true, //ama kanei click se mera na borei, kai pio kato implement to saving date
-                dateClick: async function(info) {
+                dateClick: async function (info) {
                     //on click, prosthethei ena public event (availability)
                     let title = prompt('Set availability / Add public event title:');
                     if (title) {
                         await fetch(`${API_BASE}/add_event`, { //pame sto route tou backend add_event
                             method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
+                            headers: { 'Content-Type': 'application/json' },
                             credentials: 'include', // <--- TO PROSTHESA GIA NA MHN XANEI TO SESSION
                             body: JSON.stringify({ title: title, start: info.dateStr })
                         });
@@ -58,7 +65,21 @@
                     }
                 },
                 events: `${API_BASE}/calendar_events`//prepei na paroume ta events apo to backend
+
             });
+            const accountBtn = document.getElementById('accountBtn');
+            const account = document.querySelector('.account');
+
+            if (accountBtn && account) {
+                accountBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    account.classList.toggle('open');
+                });
+
+                document.addEventListener('click', () => {
+                    account.classList.remove('open');
+                });
+            }
             calendar.render();
         });
 
@@ -69,7 +90,7 @@
 
                 if (auth.loggedIn && auth.isBand) {
                     const myId = auth.userData.band_id;
-                    
+
                     const btn = document.getElementById('profileBtn');
                     if (btn) {
                         btn.href = `band_profile.html?id=${myId}`;
@@ -86,7 +107,7 @@
             const container = document.getElementById('requestsList');
             container.innerHTML = '';
 
-            if(requests.length === 0) { //No requests
+            if (requests.length === 0) { //No requests
                 container.innerHTML = '<p>No pending requests.</p>';
                 return;
             }
@@ -101,8 +122,8 @@
                             </div>
                         </div>
                     `;
-                } 
-                
+                }
+
                 else if (r.status === 'to be done') {
                     content = `
                         <div class="request-card status-tobedone">
@@ -129,11 +150,11 @@
         //listeners/actions gia ta accept/reject/done
         /*status allagi apo requested se to be done i rejected i apo to be done se done*/
         async function setStatus(id, status) {
-            if(!confirm(`Change status to '${status}'?`)) return;
-            
+            if (!confirm(`Change status to '${status}'?`)) return;
+
             await fetch(`${API_BASE}/request/${id}`, {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include', // <--- TO PROSTHESA
                 body: JSON.stringify({ status })
             });
@@ -144,11 +165,11 @@
         function toggleChat(id) {
             const el = document.getElementById(`chat_area_${id}`);
             el.style.display = (el.style.display === 'block') ? 'none' : 'block';
-            if(el.style.display === 'block') {
+            if (el.style.display === 'block') {
                 loadMessages(id);
                 //esto kai na fortonei kathe 5 deuterolepta ta minima
-                if(!window.chatInterval) window.chatInterval = {};
-                if(window.chatInterval[id]) clearInterval(window.chatInterval[id]);
+                if (!window.chatInterval) window.chatInterval = {};
+                if (window.chatInterval[id]) clearInterval(window.chatInterval[id]);
                 window.chatInterval[id] = setInterval(() => loadMessages(id), 5000);
             }
         }
@@ -159,11 +180,11 @@
             const msgs = await res.json();
             const box = document.getElementById(`msgs_${eventId}`);
             box.innerHTML = '';
-            
+
             msgs.forEach(m => { //gia kathe minima to vazei sto chat box
                 const isBand = (m.sender === 'band');
                 const align = isBand ? 'text-align:right;' : 'text-align:left;';
-                const color = isBand ? '#dcfce7' : '#f1f5f9'; 
+                const color = isBand ? '#dcfce7' : '#f1f5f9';
                 box.innerHTML += `
                 <div style="${align} margin-bottom:10px;">
                     <div style="display:inline-block; padding:8px 12px; border-radius:12px; background:${color}; color:#000; max-width:80%;">
@@ -178,11 +199,11 @@
         async function sendMessage(eventId) {
             const input = document.getElementById(`input_${eventId}`);
             const txt = input.value.trim();
-            if(!txt) return; //apla ama den yparxei minima, min to steilei(epistrefei)
+            if (!txt) return; //apla ama den yparxei minima, min to steilei(epistrefei)
 
             await fetch(`${API_BASE}/message`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include', // <--- TO PROSTHESA gia na vlepoume ta id tou band
                 body: JSON.stringify({ event_id: eventId, message: txt, sender: 'band' })
             });
@@ -201,8 +222,28 @@
         setupProfileLink();
         loadEarnings();
         loadRequests();
-
-</script>
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    // Call the logout endpoint on the server
+                    await fetch('http://localhost:3000/logout', { 
+                        method: 'POST',
+                        credentials: 'include' 
+                    });
+                    
+                    // Redirect to the main page
+                    // Note: If your main file is named 'index2.html', change this line!
+                    window.location.href = '../../index.html'; 
+                } catch (err) {
+                    console.error("Logout failed:", err);
+                    // Optional: redirect anyway if the server is unreachable
+                    window.location.href = '../../index.html';
+                }
+            });
+        }
+    </script>
 
 </body>
+
 </html>
