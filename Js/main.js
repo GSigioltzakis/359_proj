@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     const passwordInput = document.getElementById('password');
     const passwordConfirm = document.getElementById('conf_passw');
     const passwordError = document.getElementById('password_error');
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         //weak pass
         const badwords_ar = ["band", "music", "mpanta", "mousiki"];
         const lowerCasePassword = password.toLowerCase();
-        
+
         for (const word of badwords_ar) {
             if (lowerCasePassword.includes(word)) {
                 isWeak = true;
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     numberCount++;
                 }
             }
-            
+
             const numberPercent = (numberCount / password.length) * 100;
             if (numberPercent >= 40) {
                 isWeak = true;
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const char = password.charAt(i);
                 charCounts[char] = (charCounts[char] || 0) + 1;
             }
-            
+
             let maxCount = 0;
             for (const char in charCounts) {
                 maxCount = Math.max(maxCount, charCounts[char]);
@@ -96,12 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        
+
         if (!isWeak) {
             const hasLower = /[a-z]/.test(password);
             const hasUpper = /[A-Z]/.test(password);
             const hasNumber = /[0-9]/.test(password);
-            const hasSymbol = /[^a-zA-Z0-9]/.test(password); 
+            const hasSymbol = /[^a-zA-Z0-9]/.test(password);
 
             if (hasLower && hasUpper && hasNumber && hasSymbol) {
                 message = 'Strong Password';
@@ -140,10 +140,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //SECONT PARTTTTT
     const validateBtn = document.getElementById('validate-address-btn');
-    const countryInput = document.getElementById('country') || document.getElementById('band_country'); 
+    const countryInput = document.getElementById('country') || document.getElementById('band_country');
     const cityInput = document.getElementById('city') || document.getElementById('band_city');
-    const addressInput = document.getElementById('validate_address') || document.getElementById('band_address'); 
-    
+    const addressInput = document.getElementById('validate_address') || document.getElementById('band_address');
+
     const messageSpan = document.getElementById('address-message');
     const latInput = document.getElementById('latitude');
     const lonInput = document.getElementById('longitude');
@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const queryString = `${address}, ${city}, ${country}`;
-        
+
         clearLatLon();
 
         const apiKey = "0a44f5767cmsh434e71bcea52503p11a64fjsn3466a029f2fe";
@@ -183,25 +183,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showMessage('Checking...', 'black');
         //-----------given ajax code from class
-        const xhr = new XMLHttpRequest(); 
-        xhr.onreadystatechange = function() {
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) { //given state
                 if (xhr.status === 200) { //if ok
                     const data = JSON.parse(xhr.responseText);
                     if (data && data.length > 0) {
                         const firstResult = data[0];
-                        
+
                         const countryCode = firstResult.address ? firstResult.address.country_code : null;
 
                         if (countryCode && countryCode !== 'gr') {
                             showMessage('Service availble only on Greece', 'red');
-                        } 
+                        }
                         else {
                             const lat = firstResult.lat;
                             const lon = firstResult.lon;
                             if (latInput) latInput.value = lat;
-                            if (lonInput) lonInput.value = lon; 
-                            
+                            if (lonInput) lonInput.value = lon;
+
                             showMessage('Location-Address approved!', 'green');
                             console.log(`Lat: ${lat}, Lon: ${lon}`);
                             showMap(lat, lon);
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         showMessage('Address not found', 'red');
                     }
-                    
+
                 } else {//if we find another responce error such as 400 401.. then false
                     console.error('API Error:', xhr.status, xhr.statusText);
                     showMessage('Connection error, API', 'red');
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        xhr.onerror = function() {
+        xhr.onerror = function () {
             console.error('Network Error');
             showMessage('Check your internet service.', 'red');
         };
@@ -225,10 +225,10 @@ document.addEventListener('DOMContentLoaded', () => {
         xhr.open('GET', url); //xhm open
         xhr.setRequestHeader('x-rapidapi-key', apiKey);
         xhr.setRequestHeader('x-rapidapi-host', 'forward-reverse-geocoding.p.rapidapi.com');//given
-        
+
         xhr.send(null); //sending null because we dont want anythng to send
     }
-    
+
     function showMessage(text, color) {
         if (messageSpan) {
             messageSpan.textContent = text;
@@ -236,15 +236,15 @@ document.addEventListener('DOMContentLoaded', () => {
             messageSpan.style.display = 'inline';
         }
     }
-    
+
     function clearLatLon() {
         if (latInput) latInput.value = '';
         if (lonInput) lonInput.value = '';
         const mapContainer = document.getElementById('Map');//hiding/destroying the map
-        if (mapContainer) mapContainer.style.display = 'none'; 
-        if (map) { 
-            map.destroy(); 
-            map = null; 
+        if (mapContainer) mapContainer.style.display = 'none';
+        if (map) {
+            map.destroy();
+            map = null;
         }
     }
 
@@ -254,20 +254,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let map = null;
     let markersLayer = null;
 
-    function showMap(lat, lon) { 
+    function showMap(lat, lon) {
         const mapContainer = document.getElementById('Map');
         if (!mapContainer) return;
 
-        mapContainer.style.display = 'block'; 
+        mapContainer.style.display = 'block';
         if (!map) {
-        map = new OpenLayers.Map("Map");
+            map = new OpenLayers.Map("Map");
             var mapnik = new OpenLayers.Layer.OSM();
             map.addLayer(mapnik);
-            
+
             markersLayer = new OpenLayers.Layer.Markers("Markers");
             map.addLayer(markersLayer);
         }
-        
+
         markersLayer.clearMarkers();
 
         var position = setPosition(lat, lon);
@@ -277,19 +277,19 @@ document.addEventListener('DOMContentLoaded', () => {
         var markers = markersLayer;
         var mar = new OpenLayers.Marker(position);
         markers.addMarker(mar);
-        mar.events.register('mousedown', mar, function(evt){
+        mar.events.register('mousedown', mar, function (evt) {
             handler(position, 'Your Location');
         })
     }
 
-    function setPosition(lat, lon){
-         var fromProjection = new OpenLayers.Projection("EPSG:4326"); //from wgs 1984 to spherical
-         var toProjection = new OpenLayers.Projection("EPSG:900913");
+    function setPosition(lat, lon) {
+        var fromProjection = new OpenLayers.Projection("EPSG:4326"); //from wgs 1984 to spherical
+        var toProjection = new OpenLayers.Projection("EPSG:900913");
         var position = new OpenLayers.LonLat(parseFloat(lon), parseFloat(lat)).transform(fromProjection, toProjection);
         return position;
     }
 
-    function handler(position, message){
+    function handler(position, message) {
         if (map && map.popups.length > 0) {
             map.removePopup(map.popups[0]);
         }
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         map.addPopup(popup);
     }
     // form submission handling, ta error codes einai sto app.js
-    const form = document.getElementById('signupForm');  
+    const form = document.getElementById('signupForm');
 
     // ajax diplotipa check gia username, email, telephone
     function createOrGetMsgSpan(input) {
@@ -348,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 450);
         });
     }
-    
+
     const API_BASE = 'http://localhost:3000';
 
     //Detect page type so we call the correct server check logic
@@ -378,8 +378,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     band_city: document.getElementById('band_city')?.value || document.getElementById('city')?.value || '',
                     telephone: document.getElementById('telephone')?.value || '',
                     lat: document.getElementById('latitude')?.value || '',
-                    lon: document.getElementById('longitude')?.value || '', 
-                    webpage: null, 
+                    lon: document.getElementById('longitude')?.value || '',
+                    webpage: null,
                     photo: null
                 };
 
@@ -394,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         alert('Band signup successful');
                         form.reset();
                         // Clear map and errors after successful submit
-                        if(typeof clearLatLon === 'function') clearLatLon();
+                        if (typeof clearLatLon === 'function') clearLatLon();
                         document.querySelectorAll('.dup-msg').forEach(el => el.textContent = '');
                     } else {
                         const text = await res.json(); // Usually json response
@@ -431,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (res.ok) {
                         alert('User signup successful');
                         form.reset();
-                        if(typeof clearLatLon === 'function') clearLatLon();
+                        if (typeof clearLatLon === 'function') clearLatLon();
                         document.querySelectorAll('.dup-msg').forEach(el => el.textContent = '');
                     } else {
                         const text = await res.json();
@@ -460,21 +460,21 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkAuthStatus() {
         try {
             const res = await fetch('http://localhost:3000/check-auth', {
-            credentials: 'include'
+                credentials: 'include'
             });
             const data = await res.json();
 
             if (data.loggedIn) {
-            if (wantsProfileView) {
-                // ΜΗΝ κάνεις redirect — δείξε το 2ο μέρος (profile)
-                showProfile(data.userData);
+                if (wantsProfileView) {
+                    // ΜΗΝ κάνεις redirect — δείξε το 2ο μέρος (profile)
+                    showProfile(data.userData);
+                } else {
+                    // κράτα το παλιό behaviour
+                    window.location.href = "http://localhost:3000/html/users/index_user.html";
+                }
             } else {
-                // κράτα το παλιό behaviour
-                window.location.href = "http://localhost:3000/index2.html";
-            }
-            } else {
-            loginSection.style.display = 'block';
-            profileSection.style.display = 'none';
+                loginSection.style.display = 'block';
+                profileSection.style.display = 'none';
             }
         } catch (err) {
             console.error(err);
@@ -498,9 +498,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username, password })
                     });
-                    
+
                     if (res.ok) {
-                        window.location.href = "../../admin_dashboard.html"; 
+                        window.location.href = "../../admin_dashboard.html";
                     } else {
                         messageP.textContent = "Invalid Admin Credentials";
                     }
@@ -522,7 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (res.ok) {
                     console.log(data.message);
-                    alert(data.message); 
+                    alert(data.message);
                     checkAuthStatus();
                     //vlepoume kai to profile
                     if (window.location.hash === '#profile') {
@@ -530,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         checkAuthStatus();
                     } else {
                         // allios login kai redirect
-                        window.location.href = "http://localhost:3000/index2.html";
+                        window.location.href = "http://localhost:3000/html/users/index_user.html";
                     }
                 } else {
                     messageP.textContent = data.error;
@@ -557,11 +557,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-                
+
                 const data = await res.json();
 
                 if (res.ok) {
-                    window.location.href = "../bands/band_dashboard.html"; 
+                    window.location.href = "../bands/band_dashboard.html";
                 } else {
                     messageP.textContent = data.error;
                 }
@@ -575,9 +575,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function showProfile(user) {
         loginSection.style.display = 'none';
         profileSection.style.display = 'block';
-        
+
         document.getElementById('welcome_user').textContent = user.username;
-        
+
         document.getElementById('prof_username').value = user.username;
         document.getElementById('prof_email').value = user.email;
         document.getElementById('prof_password').value = user.password;
@@ -604,7 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (updateForm) {
         updateForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const newData = {
                 password: document.getElementById('prof_password').value,
                 firstname: document.getElementById('prof_firstname').value,
@@ -681,7 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     resultDiv.style.color = 'green';
                     resultDiv.innerText = "Success: " + data.message;
-                    
+
                     bandNameInput.value = ''; //clear inputs
                     senderInput.value = '';
                     textInput.value = '';
