@@ -521,8 +521,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
 
                 if (res.ok) {
-                    console.log(data.message);
-                    alert(data.message);
+                    // console.log(data.message);
+                    // alert(data.message);
                     checkAuthStatus();
                     //vlepoume kai to profile
                     if (window.location.hash === '#profile') {
