@@ -61,11 +61,39 @@
 Gia to user_profile oson afora ta bands, ilopiithike me to na borei i banda na vlepei ta reviews pou tis ekanan afou afta reviews exoun ginei approve apo ton admin, kai epita ta vlepei kai i analogi banda. Episis gia extra, o pinakas anakoinoseon einai kai sto profile tis bandas.
 
 # (6) Guest user: 
-# genika Elis progress
+## genika Elis progress
 1. Η αρχική σελίδα  index2.html είναι αυτή που βλέπει ο επισκέπτης χρήστης. Από εκεί μπορεί να κάνει Log in/ sign in είτε ως user είτε ως μπάντα από το account κουμπί. Πιο αναλυτικα, στο normal user form, το κουμπακι κατω-κατω που λεει "back to home" σε στελνει ως guest user και ετσι μπορεις να δεις ολες τις μπαντες (και αυτες που εχουν δημιουργηθει απο το φορμ), και τα αναλογα events που εχουν αναρτιθει. Μετα αμα θες να δεις κατι ως συνδεδεμενος user/band, απλα πατας πανω αριστερα "Account" και εκτελεις την αναλογη λειτουργεια που θες.
 
-2. Οσον αφορα μια μεγαλη αλλαγη, στο guestt view, εγινε προσθηκη (random apo web) εικονων. Δημιουργια φακελου images και μεσα εχει τα 20 bands apo to resource.js, και ενα default band image για τις bands Που δημιουργουνται απο το form.
+2. Οσον αφορα μια μεγαλη αλλαγη, στο guestt view, εγινε προσθηκη (random apo web) εικονων. Δημιουργια φακελου images και μεσα εχει τα 20 bands apo to resource.js, και ενα default band image gia τις bands Που δημιουργουνται απο το form.
 
 Για user log in ανοίγει το αρχείο normal_login.html και έπειτα ανοίγει το index_user.html το οποίο είναι το index + δυνατότητες για εγγεγραμμένο χρήστη. 
+
+## GOOGLE GEMINI API (404 error)
+0) XRISIMOPOIISI GOOGLE GEMINI FLASH
+1) Se afto to kommati prospathw na ilopiiso to 3.4, LLM/SQL kommati. Exw kanei ta exeis:
+    1. Dimiourgia API key apo to: https://aistudio.google.com/app/api-keys
+    2. Ektelesi edolis: npm install @google/generative-ai, opou ston fakelo node_modules katevazei nea dedomena gia tin ilopiisi tou ai (prostheti nea komatia, den egine kati modify).
+    3. app.js -> prosthiki API key pano-pano ston kodika tou app.js
+    4. app.js -> arxika lamvanoume to minima tou xristi px "geia ti kaneis" sto chat kai me afton ton tropo adapokrinete analoga to AI. Ama kati paei lathos (opos error 404 gia to ai), tote stelnei minima "Sorry, I couldn't process that, write it again please."
+    5. app.js -> gia tin metafrasi keimenoun se SQL querry, prepei afou grapsoume to prompt mas, to AI na ektelesi ta 3 tasks pou tou exoume grapsi stin grammi 683-685 kai na tin metafrasi sigekrimena se SQL, afou to kanei, pernei to querry kai to prosthetei stin vasi.
+6) diorthosi index2.html (guestt)
+    1. index2.html -> allagi/diorthosi sendMusic function opou afou apo to app.js patisoume enter gia na steiloume to prompt, to ai to epexergrazete. Aftin tin douleia tis epexergasias tha tin kanei to sendMusic. "thinking". (e kai epistrefei 404...)
+    2. index2.html -> ama ola pane kala, stin grammi 1047 kai meta, mas emfanizei tin apadisi apo tin erotisi mas. 
+
+### to error pou mou vgazei pou den boroume na xrisimopoiisoume to AI:
+```
+GoogleGenerativeAIFetchError: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+    at handleResponseNotOk (C:\Users\georg\Desktop\ετος\359\A3_5504\form_pages\JS\node_modules\@google\generative-ai\dist\index.js:434:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async makeRequest (C:\Users\georg\Desktop\ετος\359\A3_5504\form_pages\JS\node_modules\@google\generative-ai\dist\index.js:403:9)
+    at async generateContent (C:\Users\georg\Desktop\ετος\359\A3_5504\form_pages\JS\node_modules\@google\generative-ai\dist\index.js:867:22)
+    at async C:\Users\georg\Desktop\ετος\359\A3_5504\form_pages\JS\app.js:660:24 {
+  status: 404,
+  statusText: 'Not Found',
+  errorDetails: undefined
+}
+```
+
+
 
 # (3) event b, user->
