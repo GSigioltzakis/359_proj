@@ -190,6 +190,12 @@
                 </div>
             </div>
 
+            <div class="f" style="border-top:1px solid #eee; padding-top:10px; margin-top:10px;">
+                <span>AI assistan</span>
+                <input id="aiSearchInput" placeholder="π.χ. Rock bands in Heraklion" />
+                <button id="btnAiSearch" class="primary-btn" style="margin-top:5px; width:100%; background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);">Ask AI</button>
+            </div>
+
             <div class="drawer-actions">
                 <button id="applyBtn" class="primary-btn" type="button">Apply</button>
                 <button id="clearBtn" class="ghost-btn" type="button">Clear</button>
@@ -680,13 +686,26 @@
             addMsg(q, 'user');
             input.value = '';
 
-            // TODO: εδώ θα καλέσεις backend endpoint /music/ask
-            // const res = await fetch('/music/ask', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({question:q})});
-            // const data = await res.json();
-            // addMsg(data.answer, 'bot');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'msg bot';
+            loadingDiv.textContent = 'Thinking...';
+            document.getElementById('musicMsgs').appendChild(loadingDiv);
+            document.getElementById('musicMsgs').scrollTop = document.getElementById('musicMsgs').scrollHeight;
 
-            // προσωρινό:
-            addMsg("Απάντηση από LLM θα εμφανιστεί εδώ (όταν συνδέσουμε το endpoint).", 'bot');
+            try {
+                //api apo app.js->655
+                const res = await fetch('http://localhost:3000/api/music-chat', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ question: q })
+                });
+                const data = await res.json();
+                
+                loadingDiv.remove();
+                addMsg(data.answer || "No answer found.", 'bot');
+            } catch (err) {
+                loadingDiv.textContent = "Error: AI not reachable.";
+            }
         }
 
         document.getElementById('musicSend').addEventListener('click', sendMusic);
@@ -1020,6 +1039,37 @@
             document.getElementById('btnMyTickets')?.addEventListener('click', () => location.href = 'html/users/my_tickets.html');
             document.getElementById('btnFavorites')?.addEventListener('click', () => location.href = 'html/users/normal_favorites.html');
             document.getElementById('btnMyMessages')?.addEventListener('click', () => location.href = 'html/users/normal_messages.html');
+        });
+
+
+
+        //AI ASSISTANT
+        document.getElementById('btnAiSearch').addEventListener('click', async () => {
+            const query = document.getElementById('aiSearchInput').value;
+            if(!query) return;
+
+            const grid = document.getElementById('bandsGrid');
+            grid.innerHTML = '<p style="padding:10px;">Looking for bands...</p>';
+
+            try {
+                const res = await fetch('http://localhost:3000/api/natural-search', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ query: query })
+                });
+                
+                if(!res.ok) throw new Error("AI Search failed");
+
+                const bands = await res.json();
+                renderBands(bands);
+                
+                //GIA NA DOUME TA APOTELESMATA:
+                closeFiltersFn();
+
+            } catch (err) {
+                console.error(err);
+                grid.innerHTML = '<p>AI could not understand the query or no bands found.</p>';
+            }
         });
     </script>
 
