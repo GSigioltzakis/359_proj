@@ -26,6 +26,13 @@ const { getUserPrivateEvents, markPrivateEventDone } = require('./databaseQuerie
 const { get } = require('http');
 
 
+/* GOOGLE GEMINI AI GIA TO LLM KOMMATI, se afto to simeio pragmati xrisimopoieithike xrisi AI gia tin epilisi aftou tou erotimatos logo tou oti
+ kai emeis oi idioi den kseroume pos na arxisoume me afto to komati para mono to "a prepei na valoume edw ena API key"... */
+
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const genAI = new GoogleGenerativeAI("AIzaSyAenv2wghMq6Wp6Kz8hzNWNkHgAwlWhH-8"); //api key gia to google geminiflash
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
 
 const app = express();
 const PORT = 3000;
@@ -643,11 +650,63 @@ app.get('/api/reviews-by-id/:id', async (req, res) => {
     }
 });
 
+//teleftea (makari) routes gia Google AI: gemini-flash.
+//--------------route gia ta assistan
+app.post('/api/music-chat', async (req, res) => {
+    try {
+        const { question } = req.body;
+        const prompt = `I need help with: ${question}`;
+        
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        
+        res.json({ answer: text });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ answer: "Sorry, I couldn't process that, write it again please." });
+    }
+});
+// ---------------------fisiki glosa se sql query
+app.post('/api/natural-search', async (req, res) => {
+    try {
+        const { query } = req.body;
 
-// console.log("ROUTES:");
-// app._router.stack
-//   .filter(r => r.route)
-//   .forEach(r => console.log(Object.keys(r.route.methods).join(",").toUpperCase(), r.route.path));
+        // edw perigrafeis ti vasi dedomenon sto AI gia na kseri pws na ftiaksi to SQL
+        const schemaContext = `
+            I have a SQLite database with a table named 'bands'.
+            Columns: band_id, band_name, music_genres, band_city, foundedYear, members_number.
+            
+            User Request: "${query}"
+            
+            Convert the user request into a SQL SELECT query. 
+            1. Use 'LIKE' for text matching (e.g. %rock%).
+            2. Return ONLY the SQL string. No markdown, no explanations.
+            3. Example format: SELECT * FROM bands WHERE band_city = 'Heraklion';
+        `;//san na leme to prompt
+
+        const result = await model.generateContent(schemaContext);
+        const response = await result.response;
+        let sqlQuery = response.text().replace(/```sql|```/g, '').trim(); //trim/ekanatharisi format promtp 
+
+        console.log("Generated SQL:", sqlQuery); //test
+
+        //vale tin sql stin vasi
+        db.all(sqlQuery, [], (err, rows) => {
+            if (err) {
+                console.error(err);
+                res.status(400).json({ error: "Invalid query generated" });
+            } else {
+                res.json(rows);
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "AI Error" });
+    }
+});
+
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
