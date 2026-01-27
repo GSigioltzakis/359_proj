@@ -10,7 +10,8 @@ async function getConnection() {
       host: "localhost",
       port: 3306,
       user: "root",
-      password: ""
+      password: "",
+     // database: "HY359_2025",
     });
     console.log('MySQL connection established.');
   }
