@@ -529,15 +529,15 @@
   // ---- calendar init ----
   async function init() {
     try {
-      await checkAuth(); // 1. Ελέγχουμε αν είναι logged in
-      await loadBand();  // 2. Φορτώνουμε τα στοιχεία της μπάντας (το βλέπουν όλοι)
-      loadReviews();     // 3. Φορτώνουμε τα reviews (το βλέπουν όλοι)
+      await checkAuth();
+      await loadBand();
+      loadReviews();
 
       const calendarContainer = document.getElementById('calendar');
 
-      // 4. ΕΛΕΓΧΟΣ: Είναι συνδεδεμένος;
+      
       if (authState.loggedIn) {
-        // ΝΑΙ: Φόρτωσε τη διαθεσιμότητα και δείξε το ημερολόγιο
+        
         const availability = await loadAvailability();
 
         const calendar = new FullCalendar.Calendar(calendarContainer, {
@@ -545,14 +545,16 @@
           headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth' },
           selectable: false,
           editable: false,
-          height: 400, // Λίγο πιο κοντό για ομορφιά
+          height: 400,
 
           events: availability.map(e => ({
             id: e.id,
-            title: 'Available',
+            title: e.title || 'Available',
             start: e.start,
-            display: 'background',
-            backgroundColor: '#28a745'
+            backgroundColor: '#3788d8', //ble
+            borderColor: '#3788d8',
+            textColor: '#ffffff',
+            cursor: 'pointer'
           })),
 
           eventClick: function (info) {
@@ -565,7 +567,7 @@
         //kripse imerologio
         calendarContainer.innerHTML = `
             <div style="text-align:center; padding: 40px 20px; color: #555; background: #fdfdfd; border: 1px dashed #ccc; border-radius: 8px;">
-                <p style="font-size: 1.2em;"><strong>Availability Locked</strong></p>
+                <p style="font-size: 1.2em;">klidomeno<strong>Availability Locked</strong></p>
                 <p>To see available dates and book this band, please <a href="/html/users/normal_login.html" style="color:#1368c9; font-weight:bold;">Log in</a>.</p>
             </div>
           `;
