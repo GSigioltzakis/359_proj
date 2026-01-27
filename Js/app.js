@@ -71,7 +71,8 @@ app.post('/login', async (req, res) => {
             req.session.isBand = false;
             req.session.bandUsername = null;
             req.session.bandData = null;
-
+            //to xriazomaste afto gia epitixes login...xoris afto den ginete logged ino user
+            return res.status(200).json({ message: 'Login success' });
         } else {
             res.status(401).json({ error: "Invalid username or password" });
         }
