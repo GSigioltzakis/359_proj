@@ -9,7 +9,7 @@ async function getConnection() {
       port: 3306,
       user: "root",
       password: "",
-      database: "HY359_2025",
+      database: "hy359_2025",
     });
   }
   return connection;
