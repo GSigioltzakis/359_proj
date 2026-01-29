@@ -2,85 +2,93 @@
   <img src="https://media.tenor.com/SkKQMYdLjZIAAAAM/bugs-bunny.gif" width="100"/>
 </div>
 
-#        ---------------359 project simioseis---------------
-# SOS: gia na kanw parse ta dedomena tou resource.js stin vasi (xoris na ta kanw ena ena me to xeri), ekana script pou ta pernei ola apeftheias kai ta vazei stin vasi. dbScript.js kai gia na to trexoume grafoume: node dbScript.js. To trexoume X fores mexri na doume to prasino tick (ne to peira etoimo).
+# WebDEV project notes
+ To parse the data from resource.js into the database (without doing them one by one manually), I made a script that takes them all directly and puts them in the database. dbScript.js and to run it we write: node dbScript.js. We run it X times until we see the green tick (yes I got it ready-made).
+## To lauch succcesfuly the project do:
+```
+1) npm install express mysql2 cors express-session
+2) cd Js
+3) node dbScript.js
+4) node app.js
+0) open the mySQL database from a server (lets say XAAMP)
+```
 # (1) event A, ADMIN panel
-## prosthiki olon ton erotimaton ektos apo!: /// pie-chart: αριθμός public private/events ////
-1) dimiourgia admin_dashboard.html gia to dashboard pou tha vlepei mono o admin meso route. To dashboard afto sindeete me:
-    1. app.js -> elenxoume an einai odos o admin meso kodiko
-    2. app.js -> me get/delete epexergazomaste ta dedomena ton users (kai pio kato bands)
-    3. app.js -> alla 2 get gia ta reviews ton xriston (ta pernoume gia na ta dei kai na ta kanei approve o admin) kai gia to pie-chart.
-    4. adminLogin.css gia styling ta route dashboard.
+## addition of all queries except!: /// pie-chart: number of public private/events ////
+1) creation of admin_dashboard.html for the dashboard that only the admin will see via route. This dashboard is connected to:
+    1. app.js -> we check if it is indeed the admin via password
+    2. app.js -> with get/delete we process user data (and bands further down)
+    3. app.js -> another 2 get requests for user reviews (we get them so the admin can see and approve them) and for the pie-chart.
+    4. adminLogin.css for styling the dashboard route.
 
-2) dimiourgia ksexoristou login logo prosthikis tou admin:
-    1. main.js -> ama sto username doume "admin", tote pame sto analogo admin_dashboard.html
-    2. main.js -> alios anoigoume apla to JS arxeio me to profile pou borei na epexergasti o kathe xristis gia ton eafto tou.
+2) creation of a separate login due to the addition of the admin:
+    1. main.js -> if we see "admin" in the username, then we go to the corresponding admin_dashboard.html
+    2. main.js -> otherwise we simply open the JS file with the profile that each user can edit for themselves.
 
-3) dimiourgia neou arxeiou gia SQL code:
-    1. databaseQueriesAdmin.js -> gia deleteUser, getReview kai stats gia to chart.
+3) creation of a new file for SQL code:
+    1. databaseQueriesAdmin.js -> for deleteUser, getReview and stats for the chart.
 
-# (2) dimiourgia sxediagramatos gt den eixa ti alo na kanw:
---> sxediagrama.html
+# (2) creation of a diagram bc I didn't have anything else to do:
+--> diagram.html (sxediagrama.html)
 
-# (3) ston fakelo bands dimiourgisa 2 nea arxeia (tha valw alla 2 pio meta), gia pio koble login proccess.
-1) band_user.hmtl -> omoio me to normal_user.html, apla eikona gia na patiseis ta koubia.
-2) band_login -> ilopiisi tou login omoia me to normal_login.html (kapos).
+# (3) in the bands folder I created 2 new files (I will put another 2 later), for a smoother login process.
+1) band_user.hmtl -> similar to normal_user.html, just an image to press the buttons.
+2) band_login -> implementation of the login similar to normal_login.html (sort of).
 3) 1. .(band_dashboard.html)
    2. .(band_profile.html) tba
 
-# (4) event Γ, bands-> band_dashboard
-## NOTE: trexe me dedomena apo tin vasi. (exoun idi xrisima pramata mesa, etsi boroume na kanoume anexartitos ta erotimata A B Γ Δ)
+# (4) event C, bands-> band_dashboard
+## NOTE: run with data from the database. (they already have useful things inside, so we can do queries A B C D independently)
 
-1) dimiourgia band_dashboard.html (afou exw kanei to login). Ilopiisi tou plires band dashboard:
-    1. 2 meries: miso aristera kai dexia. Stin aristeri meria iparxei to calendar parmeno apo to https://fullcalendar.io/ .
+1) creation of band_dashboard.html (after I have done the login). Implementation of the full band dashboard:
+    1. 2 sides: half left and right. On the left side there is the calendar taken from https://fullcalendar.io/ .
     
-    2. band_dashboard.html -> Aristeri meria dashboard: calendar ilopiimeno me id=calendar, etsi oste na paei sto JS script ligo pio kato (mesa sto html arxeio), kai ilopio ta exeis gia to calendar: ena event lister pou periexei to click tis imerominias, tin apothikefsi pliroforias mesa stin imerominia kai add_events gia events pou iparxoun idi stin vasi.
+    2. band_dashboard.html -> Left side dashboard: calendar implemented with id=calendar, so it goes to the JS script a bit further down (inside the html file), and I implement the following for the calendar: an event listener that contains the date click, the storage of information inside the date and add_events for events that already exist in the database.
     
-    3. band_dashboard.html -> Dexia meria dashboard: 
-        1. Travaei ta aitimata krateisis (requests) apo to backend. An to status einai 'requested', emfanizei koumbi gia Accept/Reject. An ginei accept, to status allazei se 'to be done' kai to event ginetai energo.
-        2. Gia ta 'to be done' events, energopoiei ena chat box. H mpanta mporei na antalaksei minimata me ton xristi gia leptomeries. Ta minimata ananeonontai automata kathe 5 defterolepta (polling).
-        3. Epitrerpei stin mpanta na markarei ena energo event ws DONE (olokliromeno) gia na kleisei h krateisi kai telos ipologizei kai emfanizei ta synolika esoda tis mpantas apo ta events pou exoun oloklirothei.
+    3. band_dashboard.html -> Right side dashboard: 
+        1. Pulls reservation requests from the backend. If the status is 'requested', it shows a button for Accept/Reject. If accepted, the status changes to 'to be done' and the event becomes active.
+        2. For 'to be done' events, it activates a chat box. The band can exchange messages with the user for details. Messages update automatically every 5 seconds (polling).
+        3. Allows the band to mark an active event as DONE (completed) to close the reservation and finally calculates and displays the band's total earnings from completed events.
     
-    4. band_dashboard.html -> pano dexia kai  kato dexia periexode: ena koubi "edit profile" gia na kanei redirect sto band_profile.html pou borei o xristis na kanei edit to profile tou, kai kato dexia iparxoun ta earnings (aplo block).
+    4. band_dashboard.html -> top right and bottom right contains: a button "edit profile" to redirect to band_profile.html where the user can edit their profile, and bottom right there are the earnings (simple block).
     
-    5. band_dash.css ilopiisi diaforetikou arxeiou (css) gia styling me voithia google.
-2) backend ilopiisi gia tous band users(me sindesi sto dbQuerriesBand.js):
-    1. app.js -> gia to calendar: prosthiki idi iparxondon events mesa sto calendar.
+    5. band_dash.css implementation of a different file (css) for styling with google help.
+2) backend implementation for the band users(with connection to dbQuerriesBand.js):
+    1. app.js -> for the calendar: addition of already existing events inside the calendar.
     
-    2. app.js -> ilopiisi requests os accept/reject etsi oste afou paroume ta requests ton xriston, na boroume na kanoume update meta kai na fanei (an eginan accepted h oxi).
+    2. app.js -> implementation of requests as accept/reject so that after we get the users' requests, we can update later and have it show (if they were accepted or not).
     
-    3. app.js -> teliki ilopiisi gia tin emfanisi sinomilias. Iparxoun idi merika users pou epikinonoun sto database os paradeigma (resources.js), etsi ta pernoume kai ta ilopoioume, accepted->(button), ara anoigei tin sinomilia diladi vriski (kai emfanizei) apo tin vasi tin "Sinomilia". NOTE: isos pera apo ta iparxoda minimata na min boroume na prosthesoume nea, alla ama patisoume done (mark as done), kai refresh->to balance tha exei ananeothei analoga.
+    3. app.js -> final implementation for the chat display. There are already some users communicating in the database as an example (resources.js), so we take them and implement them, accepted->(button), so it opens the chat meaning it finds (and displays) from the database the "Conversation". NOTE: perhaps beyond existing messages we might not be able to add new ones, but if we press done (mark as done), and refresh->the balance will have updated accordingly.
     
-    4. databaseQuerriesBands.js -> enimerosi idi iparxodos arxeiou me prosthiki: 
-        1. Antlei toso ta Public oso kai ta 'Accepted' Private events gia emfanisi sto imerologio, enw epitrepei kai tin kataxwrisi neas diathesimotitas (public event) apo tin mpanta me get kai addbands.
-        2. Fernei ola ta ekkremeis kai energa aitimata (krateiseis) syndyasmena me ta stoixeia tou xristi (me xrisi JOIN) kai enimeronei thn katastasi tous (px. accepted/rejected).
-        3. Fernei ola ta ekkremeis kai energa aitimata (krateiseis) syndyasmena me ta stoixeia tou xristi (me xrisi JOIN) kai enimeronei thn katastasi tous (px. accepted/rejected).
-        4. Apothikeuei nea minimata kai anakta to istoriko synomilias gia sygekrimena events. Telos, ipologizei ta kathara kerdi tis mpantas athroizontas thn aksia twn olokliromenwn ('done') events kai afairontas promitheia 15%.
+    4. databaseQuerriesBands.js -> update of already existing file with addition: 
+        1. Retrieves both Public and 'Accepted' Private events for display on the calendar, while allowing the registration of new availability (public event) by the band with get and addbands.
+        2. Fetches all pending and active requests (reservations) combined with user details (using JOIN) and updates their status (e.g. accepted/rejected).
+        3. Fetches all pending and active requests (reservations) combined with user details (using JOIN) and updates their status (e.g. accepted/rejected).
+        4. Saves new messages and retrieves chat history for specific events. Finally, it calculates the band's net earnings by summing the value of completed ('done') events and subtracting a 15% commission.
 
-# (5) event Γ, bands-> user_profile.
-Gia to user_profile oson afora ta bands, ilopiithike me to na borei i banda na vlepei ta reviews pou tis ekanan afou afta reviews exoun ginei approve apo ton admin, kai epita ta vlepei kai i analogi banda. Episis gia extra, o pinakas anakoinoseon einai kai sto profile tis bandas.
+# (5) event C, bands-> user_profile.
+For the user_profile regarding the bands, it was implemented by allowing the band to see the reviews made for it after these reviews have been approved by the admin, and then the corresponding band sees them too. Also for extra, the notice board is also on the band's profile.
 
 # (6) Guest user: 
-## genika Elis progress
-1. Η αρχική σελίδα  index2.html είναι αυτή που βλέπει ο επισκέπτης χρήστης. Από εκεί μπορεί να κάνει Log in/ sign in είτε ως user είτε ως μπάντα από το account κουμπί. Πιο αναλυτικα, στο normal user form, το κουμπακι κατω-κατω που λεει "back to home" σε στελνει ως guest user και ετσι μπορεις να δεις ολες τις μπαντες (και αυτες που εχουν δημιουργηθει απο το φορμ), και τα αναλογα events που εχουν αναρτιθει. Μετα αμα θες να δεις κατι ως συνδεδεμενος user/band, απλα πατας πανω αριστερα "Account" και εκτελεις την αναλογη λειτουργεια που θες.
+## general Elis progress
+1. The home page index2.html is the one the guest user sees. From there they can Log in/ sign in either as a user or as a band from the account button. More specifically, in the normal user form, the button at the very bottom that says "back to home" sends you as a guest user and so you can see all the bands (and those created by the form), and the corresponding events that have been posted. Then if you want to see something as a logged-in user/band, you just click "Account" top left and execute the corresponding function you want.
 
-2. Οσον αφορα μια μεγαλη αλλαγη, στο guestt view, εγινε προσθηκη (random apo web) εικονων. Δημιουργια φακελου images και μεσα εχει τα 20 bands apo to resource.js, και ενα default band image gia τις bands Που δημιουργουνται απο το form.
+2. Regarding a big change, in the guest view, addition (random from web) of images was done. Creation of images folder and inside it has the 20 bands from resource.js, and a default band image for the bands created by the form.
 
-Για user log in ανοίγει το αρχείο normal_login.html και έπειτα ανοίγει το index_user.html το οποίο είναι το index + δυνατότητες για εγγεγραμμένο χρήστη. 
+For user log in, the file normal_login.html opens and then index_user.html opens which is the index + capabilities for a registered user. 
 
 ## GOOGLE GEMINI API (404 error)
-0) XRISIMOPOIISI GOOGLE GEMINI FLASH
-1) Se afto to kommati prospathw na ilopiiso to 3.4, LLM/SQL kommati. Exw kanei ta exeis:
-    1. Dimiourgia API key apo to: https://aistudio.google.com/app/api-keys
-    2. Ektelesi edolis: npm install @google/generative-ai, opou ston fakelo node_modules katevazei nea dedomena gia tin ilopiisi tou ai (prostheti nea komatia, den egine kati modify).
-    3. app.js -> prosthiki API key pano-pano ston kodika tou app.js
-    4. app.js -> arxika lamvanoume to minima tou xristi px "geia ti kaneis" sto chat kai me afton ton tropo adapokrinete analoga to AI. Ama kati paei lathos (opos error 404 gia to ai), tote stelnei minima "Sorry, I couldn't process that, write it again please."
-    5. app.js -> gia tin metafrasi keimenoun se SQL querry, prepei afou grapsoume to prompt mas, to AI na ektelesi ta 3 tasks pou tou exoume grapsi stin grammi 683-685 kai na tin metafrasi sigekrimena se SQL, afou to kanei, pernei to querry kai to prosthetei stin vasi.
-6) diorthosi index2.html (guestt)
-    1. index2.html -> allagi/diorthosi sendMusic function opou afou apo to app.js patisoume enter gia na steiloume to prompt, to ai to epexergrazete. Aftin tin douleia tis epexergasias tha tin kanei to sendMusic. "thinking". (e kai epistrefei 404...)
-    2. index2.html -> ama ola pane kala, stin grammi 1047 kai meta, mas emfanizei tin apadisi apo tin erotisi mas. 
+0) USE OF GOOGLE GEMINI FLASH
+1) In this part I try to implement the 3.4, LLM/SQL part. I have done the following:
+    1. Creation of API key from: https://aistudio.google.com/app/api-keys
+    2. Execution of command: npm install @google/generative-ai, where in the node_modules folder it downloads new data for the implementation of the ai (adds new parts, nothing was modified).
+    3. app.js -> addition of API key at the very top of the app.js code
+    4. app.js -> initially we receive the user's message e.g. "hi how are you" in the chat and in this way the AI responds accordingly. If something goes wrong (like error 404 for the ai), then it sends message "Sorry, I couldn't process that, write it again please."
+    5. app.js -> for the translation of text to SQL query, after we write our prompt, the AI must execute the 3 tasks we have written for it in line 683-685 and translate it specifically to SQL, after it does so, it takes the query and adds it to the database.
+6) correction of index2.html (guestt)
+    1. index2.html -> change/correction of sendMusic function where after we press enter from app.js to send the prompt, the ai processes it. This processing job will be done by sendMusic. "thinking". (well and it returns 404...)
+    2. index2.html -> if all goes well, in line 1047 and onwards, it shows us the answer from our question.
 
-### to error pou mou vgazei pou den boroume na xrisimopoiisoume to AI:
+### the error it shows me where we can't use the AI:
 ```
 GoogleGenerativeAIFetchError: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
     at handleResponseNotOk (C:\Users\georg\Desktop\ετος\359\A3_5504\form_pages\JS\node_modules\@google\generative-ai\dist\index.js:434:11)
@@ -93,7 +101,3 @@ GoogleGenerativeAIFetchError: [GoogleGenerativeAI Error]: Error fetching from ht
   errorDetails: undefined
 }
 ```
-
-
-
-# (3) event b, user->
